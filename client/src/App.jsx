@@ -1,12 +1,12 @@
 // App.js
 import React from 'react'; 
-import Index from './pages/Index'; 
+import Index from './pages/Index';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
 } from "react-router-dom";
-import MainLayout from './components/layout';
+import MainLayout from './components/Layout';
 function App() {
   return (
     <MainLayout>
