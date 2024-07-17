@@ -1,20 +1,20 @@
-# Verwende das Node.js-Image in der LTS-Version
+# Use the Node.js LTS version image as the base image
 FROM node:lts
 
-# Setze das Arbeitsverzeichnis im Container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Kopiere die package.json und package-lock.json in das Arbeitsverzeichnis
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Installiere die Abhängigkeiten
+# Install dependencies
 RUN npm install --quiet
 
-# Kopiere den Rest des Anwendungscodes in das Arbeitsverzeichnis
+# Copy the rest of the application code to the working directory
 COPY . .
 
-# Exponiere den Port, auf dem die Anwendung läuft
+# Expose the port on which the application runs
 EXPOSE 4000
 
-# Starte die Anwendung
+# Start the application
 CMD ["node", "server.js"]

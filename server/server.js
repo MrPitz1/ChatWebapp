@@ -1,6 +1,6 @@
 const express = require('express');
 const Redis = require('ioredis');
-
+const Cors = require('cors');
 const app = express();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'redis',
@@ -9,6 +9,8 @@ const redis = new Redis({
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+// Middlewar to allow requests from different locations
+app.use(Cors());
 
 // Endpoint to set a value in Redis
 app.post('/set-name', async (req, res) => {
