@@ -31,7 +31,7 @@ const Chat = () => {
 
   useEffect(() => {
     const socket = io.connect('http://localhost:4000', {
-      transports: ['websocket'], // Ensure that websocket is used
+      transports: ['websocket'],
     });
     setSocket(socket);
 
@@ -42,19 +42,25 @@ const Chat = () => {
     socket.on('created', (room) => {
       setIsInitiator(true);
       console.log(`Created room ${room}`);
+      document.getElementById("remotename").innerHTML = `Waiting for a peer to join...`;
+      socket.emit('creatorname', room, clientName); // Send the creator's name
     });
 
     socket.on('full', (room) => {
       console.log(`Room ${room} is full`);
     });
 
+    socket.on('notfound', (room) => {
+      console.log(`Room ${room} not found`);
+    });
+
     socket.on('join', (room, client) => {
       console.log(`Another peer made a request to join room ${room} with name: ${client}`);
-      console.log(`This peer is the initiator of room ${room}!`);
       setIsChannelReady(true);
-      setRemoteClient(client);
-      document.getElementById("remotename").innerHTML = `Connected to: ${client}`;
-      socket.emit('creatorname', room, clientName);
+      if (isInitiator) {
+        document.getElementById("remotename").innerHTML = `Connected to: ${client}`;
+        setRemoteClient(client);
+      }
     });
 
     socket.on('mynameis', (client) => {
@@ -66,26 +72,34 @@ const Chat = () => {
     socket.on('joined', (room) => {
       console.log(`joined: ${room}`);
       setIsChannelReady(true);
+      maybeStart();
     });
 
     socket.on('message', (message, room) => {
       console.log('Client received message:', message, room);
       if (message === 'gotuser') {
+        setIsChannelReady(true);
         maybeStart();
       } else if (message.type === 'offer') {
         if (!isInitiator && !isStarted) {
           maybeStart();
         }
-        pc.setRemoteDescription(new RTCSessionDescription(message));
-        doAnswer();
+        if (pc) {
+          pc.setRemoteDescription(new RTCSessionDescription(message));
+          doAnswer();
+        }
       } else if (message.type === 'answer' && isStarted) {
-        pc.setRemoteDescription(new RTCSessionDescription(message));
+        if (pc) {
+          pc.setRemoteDescription(new RTCSessionDescription(message));
+        }
       } else if (message.type === 'candidate' && isStarted) {
-        var candidate = new RTCIceCandidate({
-          sdpMLineIndex: message.label,
-          candidate: message.candidate,
-        });
-        pc.addIceCandidate(candidate);
+        if (pc) {
+          var candidate = new RTCIceCandidate({
+            sdpMLineIndex: message.label,
+            candidate: message.candidate,
+          });
+          pc.addIceCandidate(candidate);
+        }
       } else if (message === 'bye' && isStarted) {
         handleRemoteHangup();
       }
@@ -98,8 +112,14 @@ const Chat = () => {
     };
   }, [pc]);
 
+  useEffect(() => {
+    if (isChannelReady) {
+      maybeStart();
+    }
+  }, [isChannelReady]);
+
   const sendMessage = (message) => {
-    console.log("Client sending message: ", message, 'test');
+    console.log("Client sending message: ", message);
     socket.emit('message', message, 'test');
   };
 
@@ -108,45 +128,46 @@ const Chat = () => {
     if (!isStarted && isChannelReady) {
       console.log(">>>>>> creating peer connection");
       createPeerConnection();
-      setIsStarted(true);
-      console.log("isInitiator", isInitiator);
-      if (isInitiator) {
-        doCall();
-      }
     }
   };
 
   const createPeerConnection = () => {
     try {
-      const pc = new RTCPeerConnection(turnConfig);
-      pc.onicecandidate = handleIceCandidate;
-      console.log("Created RTCPeerConnnection");
+      const newPc = new RTCPeerConnection(turnConfig); // Create a new RTCPeerConnection
+      newPc.onicecandidate = handleIceCandidate;
+      console.log("Created RTCPeerConnection");
 
       if (isInitiator) {
-        const dataChannel = pc.createDataChannel("filetransfer");
+        const dataChannel = newPc.createDataChannel("filetransfer");
         dataChannel.onopen = () => {
           console.log("Data channel opened");
+          setDataChannel(dataChannel);
         };
         dataChannel.onmessage = (event) => {
           console.log("Received message: " + event.data);
           viewMsgToElement(document.getElementById("messagesent"), event.data);
         };
-        setDataChannel(dataChannel);
+        console.log("Initiator data channel set");
       } else {
-        pc.ondatachannel = (event) => {
+        newPc.ondatachannel = (event) => {
           const channel = event.channel;
           channel.onopen = () => {
             console.log("Data channel opened");
+            setDataChannel(channel);
           };
           channel.onmessage = (event) => {
             console.log("Received message: " + event.data);
             viewMsgToElement(document.getElementById("messagesent"), event.data);
           };
-          setDataChannel(channel);
+          console.log("Non-initiator data channel set");
         };
       }
 
-      setPc(pc);
+      setPc(newPc);
+      setIsStarted(true); // Set isStarted after setting pc
+      if (isInitiator) {
+        doCall(newPc); // Pass newPc to doCall
+      }
     } catch (e) {
       console.log("Failed to create PeerConnection, exception: " + e.message);
       alert("Cannot create RTCPeerConnection object.");
@@ -172,23 +193,33 @@ const Chat = () => {
     console.log("createOffer() error: ", event);
   };
 
-  const doCall = () => {
+  const doCall = (peerConnection) => {
     console.log("Sending offer to peer");
-    pc.createOffer().then(setLocalAndSendMessage, handleCreateOfferError);
+    if (peerConnection) {
+      peerConnection.createOffer().then(setLocalAndSendMessage, handleCreateOfferError);
+    } else {
+      console.log("PeerConnection not created.");
+    }
   };
 
   const doAnswer = () => {
     console.log("Sending answer to peer.");
-    pc.createAnswer().then(
-      setLocalAndSendMessage,
-      onCreateSessionDescriptionError
-    );
+    if (pc) {
+      pc.createAnswer().then(
+        setLocalAndSendMessage,
+        onCreateSessionDescriptionError
+      );
+    } else {
+      console.log("PeerConnection not created.");
+    }
   };
 
   const setLocalAndSendMessage = (sessionDescription) => {
-    pc.setLocalDescription(sessionDescription);
-    console.log("setLocalAndSendMessage sending message", sessionDescription);
-    sendMessage(sessionDescription);
+    if (pc) {
+      pc.setLocalDescription(sessionDescription);
+      console.log("setLocalAndSendMessage sending message", sessionDescription);
+      sendMessage(sessionDescription);
+    }
   };
 
   const onCreateSessionDescriptionError = (error) => {
@@ -209,17 +240,25 @@ const Chat = () => {
     }
   };
 
-  const connectToRoom = () => {
-    socket.emit('create or join', 'test', clientName);
+  const createRoom = () => {
+    socket.emit('create', 'test', clientName);
+  };
+
+  const joinRoom = () => {
+    socket.emit('join', 'test', clientName);
     sendMessage('gotuser');
   };
 
   const handleSendMessage = () => {
     const messageArea = document.getElementById("messagearea");
     const message = `${clientName}: ${messageArea.value}`;
+    console.log(message, dataChannel);
     if (dataChannel && dataChannel.readyState === "open") {
+      console.log("message wird gesendet");
       dataChannel.send(message);
       viewMsgToElement(document.getElementById("messagesent"), `<p>${message}</p>`);
+    } else {
+      console.log("Data channel is not open");
     }
     messageArea.value = '';
   };
@@ -232,9 +271,12 @@ const Chat = () => {
     <div>
       <h1>Send messages peer to peer</h1>
       <p id="yourname">You: {clientName}</p>
-      <p id="remotename">{remoteClient ? `Connected to: ${remoteClient}` : ''}</p>
-      <button id="connectbutton" onClick={connectToRoom}>
-        Connect with peer
+      <p id="remotename">{remoteClient ? `Connected to: ${remoteClient}` : 'Waiting for a peer to join...'}</p>
+      <button id="createbutton" onClick={createRoom}>
+        Create Room
+      </button>
+      <button id="joinbutton" onClick={joinRoom}>
+        Join Room
       </button>
       <textarea id="messagearea" name="message" rows="5" cols="50"></textarea>
       <button id="sendmessage" onClick={handleSendMessage}>Send message</button>
