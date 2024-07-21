@@ -281,8 +281,8 @@ const NAV_ITEMS = [
     href: '#',
   },
   {
-    label: 'Test7',
-    href: '#',
+    label: 'AllChat',
+    href: '/all-chat',
   },
 ];
 
