@@ -1,68 +1,60 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Button,
-  Container,
-  Input,
-  Stack,
-  Text,
-  VStack,
-  useToast,
-} from '@chakra-ui/react';
+import { Box, Button, Container, Input, Stack, Text, VStack } from '@chakra-ui/react';
+import io from 'socket.io-client';
 
 const AllChat = () => {
-  const [messages, setMessages] = useState([]);
+  const room = window.location.pathname;
+  const [messages, setMessages] = useState([]); 
   const [input, setInput] = useState('');
-  const ws = useRef(null);
-  const toast = useToast();
+  const socket = useRef(null);
+
+  const addMessage = (message, isOwnMessage = false, isItalic = false) => {
+    /*
+      Adds Messages to the Chat
+    */
+    setMessages(prevList => [...prevList, { text: message, isOwnMessage, isItalic }]);
+  };
 
   useEffect(() => {
-    // Create WebSocket connection
-    ws.current = new WebSocket('ws://localhost:4000/all-chat');
+    // Create new WebSocket
+    const newSocket = io('http://localhost:4000', {
+      transports: ['websocket'],
+    });
+    socket.current = newSocket;
 
-    ws.current.onopen = () => {
-      console.log('WebSocket connection opened');
-    };
+    // Join Room
+    newSocket.emit('join', room);
 
-    ws.current.onmessage = (event) => {
-      if (event.data instanceof Blob) {
-        // Convert Blob to text
-        const reader = new FileReader();
-        reader.onload = () => {
-          const newMessage = reader.result;
-          console.log(`Received message: ${newMessage}`);
-          setMessages(prevMessages => [...prevMessages, newMessage]);
-        };
-        reader.readAsText(event.data);
-      } else {
-        // If the message is already text
-        const newMessage = event.data;
-        console.log(`Received message: ${newMessage}`);
-        setMessages(prevMessages => [...prevMessages, newMessage]);
-      }
-    };
+    // If users join display it in the chat
+    newSocket.on('user-joined', () => {
+      addMessage('User Joined', false, true);
+    });
 
-    ws.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      toast({
-        title: 'WebSocket Error',
-        description: 'There was a problem with the WebSocket connection.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    };
+    // Receive Chat Message
+    newSocket.on('chat-message', (message) => {
+      addMessage(message);
+    });
 
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      /*
+        If window is closed disconnect
+      */
+    newSocket.disconnect();
     };
-  }, [toast]);
+}, [room]);
 
-  const sendMessage = () => {
-    if (input.trim()) {
-      ws.current.send(input);
+const sendMessage = () => {
+    /*
+      Send Message
+    */
+    const dataAndRoom = {
+      message: input,
+      room: room
+    }
+    if (input.trim() && socket.current) {
+      socket.current.emit('chat-message', dataAndRoom);
+      // Add Own Message
+      addMessage(input, true);
       setInput('');
     }
   };
@@ -78,10 +70,10 @@ const AllChat = () => {
                 p={3}
                 borderWidth={1}
                 borderRadius="md"
-                bg="gray.100"
+                bg={msg.isOwnMessage ? 'teal.100' : 'gray.100'} // Verwende unterschiedliche Hintergrundfarben
                 shadow="sm"
               >
-                <Text>{msg}</Text>
+                <Text as={msg.isItalic ? 'i' : 'span'}>{msg.text}</Text>
               </Box>
             ))}
           </Stack>

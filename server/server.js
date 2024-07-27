@@ -1,7 +1,9 @@
 const express = require('express');
 const Redis = require('ioredis');
 const Cors = require('cors');
-const { Server: WebSocketServer } = require('ws');
+const http = require('http');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { Server } = require('socket.io');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -9,80 +11,69 @@ const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = process.env.REDIS_PORT || 6379;
 
 // Create Redis clients
-const publisher = new Redis({
+const pubClient = new Redis({
   host: redisHost,
   port: redisPort,
 });
 
-const subscriber = new Redis({
+const subClient = new Redis({
   host: redisHost,
   port: redisPort,
 });
 
-// Start Express server
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Create HTTP server
+const server = http.createServer(app);
+
+// Create Socket.IO server
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Adjust this according to your needs
+    methods: ["GET", "POST"]
+  }
 });
 
-let connections = [];
+// Redisadapter to share the socket connections
+io.adapter(createAdapter(pubClient, subClient));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-// Middleware to allow requests from different locations
+// Must have: Allow Cross Origin Request 
 app.use(Cors());
 
-// Create WebSocket server
-const wss = new WebSocketServer({ server, path: '/all-chat' });
-
-// Handle WebSocket connections
-wss.on('connection', (ws) => {
-    console.log('Client connected to /all-chat');
-
-    // Handle incoming messages
-    ws.on('message', (message) => {
-        console.log(`Received message: ${message}`);
-        // Publish the message to the Redis channel
-        publisher.publish('chat_channel', message);
+io.on('connection', (socket) => {
+    /*
+        Connection init
+    */
+    console.log(`User connected: ${socket.id}`);
+  
+    socket.on('join', (room) => {
+      /*
+        Join Event: Add Socket to the /all-chat Room
+      */
+      socket.join(room);
+      console.log(`Socket ${socket.id} joined room ${room}`);
+      socket.to(room).emit('user-joined', socket.id);
+    });
+  
+    socket.on('disconnect', (socket) => {
+      /*
+        Disconnect Event
+      */
+      console.log(`User disconnected: ${socket.id}`);
     });
 
-    // Handle WebSocket close
-    ws.on('close', () => {
-        console.log('Client disconnected');
-        connections = connections.filter(conn => conn !== ws);
-    });
-
-    // Send initial connection message
-    ws.send('Connected successfully to server');
-    connections.push(ws);
-});
-
-// Handle incoming messages from Redis
-const handleRedisMessage = (channel, message) => {
-    console.log(`Received message from Redis: ${message}`);
-    // Broadcast message to all connected WebSocket clients
-    connections.forEach(conn => {
-        if (conn.readyState === conn.OPEN) {
-            console.log('Sending message to WebSocket client');
-            conn.send(message);
-        }
-    });
-};
-
-// Subscribe to Redis channel
-subscriber.subscribe('chat_channel', (err) => {
-    if (err) {
-        console.error('Failed to subscribe to Redis channel:', err);
-    } else {
-        console.log('Subscribed to Redis channel "chat_channel"');
-    }
-});
-
-subscriber.on('message', handleRedisMessage);
-
-// Optional: Clean up on process exit
-process.on('SIGINT', () => {
-    console.log('Shutting down...');
-    publisher.quit(); // Close the publisher connection
-    subscriber.quit(); // Close the subscriber connection
-    server.close(() => process.exit(0));
-});
+    socket.on('chat-message', (data) => {
+        /*
+            Message Event: Send Message to all Sockets of the Room
+        */
+        const { message, room} = data;
+        socket.to(room).emit('chat-message', message)
+    })
+  });
+  
+  // Start Server
+  const PORT = process.env.PORT || port;
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+  
