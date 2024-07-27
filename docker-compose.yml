@@ -23,6 +23,8 @@ services:
       - "3000:3000"  # Expose the Frontend port to the host
     networks:
       - app-network
+    depends_on:
+      - backend
 
   haproxy:
     image: haproxy:latest
