@@ -70,7 +70,7 @@ const sendMessage = () => {
                 p={3}
                 borderWidth={1}
                 borderRadius="md"
-                bg={msg.isOwnMessage ? 'teal.100' : 'gray.100'} // Verwende unterschiedliche Hintergrundfarben
+                bg={msg.isOwnMessage ? 'teal.100' : 'gray.100'}
                 shadow="sm"
               >
                 <Text as={msg.isItalic ? 'i' : 'span'}>{msg.text}</Text>
