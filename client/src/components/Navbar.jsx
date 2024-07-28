@@ -247,19 +247,8 @@ function MobileNavItem({ label, children, href }) {
 
 const NAV_ITEMS = [
   {
-    label: 'Test',
-    children: [
-      {
-        label: 'Test1',
-        subLabel: 'Test Description 1',
-        href: '#',
-      },
-      {
-        label: 'Test2',
-        subLabel: 'Test Description 2',
-        href: '#',
-      },
-    ],
+    label: 'P2P Chat',
+    href: '/join-room'
   },
   {
     label: 'Test3',

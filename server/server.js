@@ -74,8 +74,41 @@ allChatNamespace.on('connection', (socket) => {
   });
 });
 
+const peer2peerNamespace = io.of('/p2p');
+
+peer2peerNamespace.on('connection', (socket) => {
+  console.log(`User connected to /p2p ${socket.id}`);
+  
+  socket.on('join', (room) => {
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room ${room}`);
+    socket.to(room).emit('you-are-caller');
+  });
+
+  socket.on('you-are-callee', (room) => {
+    console.log('Emitting you-are-callee to room:', room);
+    socket.to(room).emit('you-are-callee');
+  });
+
+  socket.on('offer', ({ room, sdp }) => {
+    console.log('Emitting offer to room:', room);
+    socket.to(room).emit('offer', sdp);
+  });
+
+  socket.on('answer', ({ room, sdp }) => {
+    console.log('Emitting answer to room:', room);
+    socket.to(room).emit('answer', sdp);
+  });
+
+  socket.on('candidate', ({ room, candidate }) => {
+    console.log('Emitting candidate to room:', room);
+    socket.to(room).emit('candidate', candidate);
+  });
+});
+
+
 // Start Server
-const PORT = process.env.PORT || port;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
