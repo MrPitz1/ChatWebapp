@@ -10,7 +10,7 @@ const port = process.env.PORT || 4000;
 const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = process.env.REDIS_PORT || 6379;
 
-// Create Redis clients
+// Create redis clients
 const pubClient = new Redis({
   host: redisHost,
   port: redisPort,
@@ -21,28 +21,43 @@ const subClient = new Redis({
   port: redisPort,
 });
 
-// Create HTTP server
+const redisClient = new Redis({
+  host: redisHost,
+  port: redisPort,
+});
+
+// Create servers
 const server = http.createServer(app);
 
-// Create Socket.IO server
 const io = new Server(server, {
   cors: {
-    origin: "*", // Adjust this according to your needs
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// Use Redis adapter to share the socket connections
+// Middlewares
+app.use(express.json());
+app.use(Cors());
+
+// Redis setup
 io.adapter(createAdapter(pubClient, subClient));
 
-// Middleware to parse JSON bodies
-app.use(express.json());
-// Must have: Allow Cross Origin Request 
-app.use(Cors());
+// Helper functions for room management
+async function addSocketToRoom(room, socketId) {
+  await redisClient.sadd(room, socketId);
+}
+async function removeSocketFromRoom(room, socketId) {
+  await redisClient.srem(room, socketId);
+}
+async function getRoomMembers(room) {
+  return await redisClient.smembers(room);
+}
 
 // Define the /all-chat namespace
 const allChatNamespace = io.of('/all-chat');
 
+// Client Server Architecture
 allChatNamespace.on('connection', (socket) => {
   /*
       Connection init
@@ -74,8 +89,75 @@ allChatNamespace.on('connection', (socket) => {
   });
 });
 
+
+// P2P namespace
+const peer2peerNamespace = io.of('/p2p');
+
+// Peer to peer architecture
+peer2peerNamespace.on('connection', (socket) => {
+  /*
+      Connection init
+  */
+  socket.on('join room', async (roomID) => {
+    /*
+      Join Event: Add Socket to the /all-chat Room
+    */
+    // Add to room with redis adapter
+    socket.join(roomID);
+
+    /* 
+    Add sockets to the room with a Redis Key-Value Store. This might seem redundant,
+    but it's necessary because Redis Rooms don't support retrieving sockets across 
+    all backend instances; they only return sockets on the local backend instance. 
+    */
+    await addSocketToRoom(`room:${roomID}`, socket.id);
+
+    // Check if the room already has other users
+    const otherUsers = await redisClient.smembers(`room:${roomID}`);
+    const otherUser = otherUsers.find(id => id !== socket.id);
+
+    if (otherUser) {
+      // Notify the new user of the existing user
+      socket.emit("other user", otherUser);
+      // Notify the existing user that a new user has joined
+      socket.to(otherUser).emit("user joined", socket.id);
+    }
+  });
+
+  socket.on('offer', (payload) => {
+    /* 
+    Offer event
+    */
+    socket.to(payload.target).emit('offer', payload);
+  });
+
+  socket.on('answer', (payload) => {
+    /*
+    Anser event
+    */
+    socket.to(payload.target).emit('answer', payload);
+  });
+
+  socket.on('ice-candidate', (incoming) => {
+    /*
+    ice candidate event
+    */
+    socket.to(incoming.target).emit('ice-candidate', incoming.candidate);
+  });
+
+  socket.on('disconnect', async () => {
+    /*
+      Disconnect Event
+    */
+    // Remove socket from all rooms in Redis Key Value Store
+    const rooms = await redisClient.keys('room:*');
+    rooms.forEach(async (room) => {
+      await  removeSocketFromRoom(room, socket.id);
+    });
+  });
+});
+
 // Start Server
-const PORT = process.env.PORT || port;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
