@@ -1,109 +1,201 @@
-import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
+import React, { useRef, useEffect, useState } from "react";
+import { Button, Container, Box, Stack, Textarea } from '@chakra-ui/react';
+import io from "socket.io-client";
 
 const Room = () => {
-  const room = window.location.pathname.split('/')[2];
-  const socket = useRef(null);
-  const [isCaller, setIsCaller] = useState(false);
-  const peerConnection = useRef(null);
-  const iceServers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+  const peerRef = useRef(); 
+  const socketRef = useRef(); 
+  const otherUser = useRef();
+  const roomID = window.location.pathname.split('/')[2];
+  const [text, setText] = useState(""); 
+  const [messages, setMessages] = useState([]); 
+  const sendChannel = useRef(); 
 
   useEffect(() => {
-    const newSocket = io('http://localhost:4000/p2p', {
-      transports: ['websocket'],
-    });
-    socket.current = newSocket;
-    console.log('Socket connected:', newSocket.id);
-    newSocket.emit('join', room);
-    console.log(`Joined room: ${room}`);
+    /* 
+      Connect to the Socket.IO server and join the specified room
+    */
+    socketRef.current = io.connect("http://localhost:4000/p2p", { transports: ['websocket'] });
 
-    newSocket.on('you-are-caller', () => {
-      console.log('Received you-are-caller event');
-      setIsCaller(true);
-    });
-
-    newSocket.on('you-are-callee', () => {
-      console.log('Received you-are-callee event');
-      console.log('I am the callee');
+    socketRef.current.on('connect', () => {
+      /* 
+        Join the room upon successful connection
+      */
+      socketRef.current.emit('join room', roomID);
     });
 
-    newSocket.on('offer', async (sdp) => {
-      console.log('Received offer:', sdp);
-      if (!isCaller) {
-        console.log('I am not the caller, handling offer');
-        peerConnection.current = new RTCPeerConnection(iceServers);
-        peerConnection.current.onicecandidate = (event) => {
-          if (event.candidate) {
-            console.log('Sending ICE candidate:', event.candidate);
-            newSocket.emit('candidate', { room, candidate: event.candidate });
-          }
-        };
-
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(sdp));
-        const answer = await peerConnection.current.createAnswer();
-        await peerConnection.current.setLocalDescription(answer);
-        console.log('Sending answer:', answer);
-        newSocket.emit('answer', { room, sdp: answer });
-      }
+    /* 
+      Handle the event where another user is found
+    */
+    socketRef.current.on('other user', (userID) => {
+      callUser(userID);
     });
 
-    newSocket.on('answer', async (sdp) => {
-      console.log('Received answer:', sdp);
-      if (isCaller) {
-        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(sdp));
-        console.log('Set remote description with answer');
-      }
+    /* 
+      Handle the event where a new user joins the room
+    */
+    socketRef.current.on('user joined', (userID) => {
+      otherUser.current = userID;
     });
 
-    newSocket.on('candidate', async (candidate) => {
-      console.log('Received candidate:', candidate);
-      if (peerConnection.current) {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log('Added ICE candidate');
-      }
-    });
+    /* 
+      Set up handlers for incoming offers, answers, and ICE candidates
+    */
+    socketRef.current.on('offer', handleOffer);
+    socketRef.current.on('answer', handleAnswer);
+    socketRef.current.on('ice-candidate', handleNewICECandidateMsg);
 
     return () => {
-      console.log('Disconnecting socket:', newSocket.id);
-      newSocket.disconnect();
+      /* 
+        Disconnect from the Socket.IO server when the component unmounts
+      */
+      socketRef.current.disconnect();
     };
-  }, [room]);
+  }, [roomID]);
 
-  useEffect(() => {
-    if (isCaller && socket.current) {
-      console.log('I am the caller, creating offer');
-      socket.current.emit('you-are-callee', room);
-      createOffer();
+  function callUser(userID) {
+    /* 
+      Create a new peer connection and data channel for the specified user
+    */
+    peerRef.current = createPeer(userID);
+    sendChannel.current = peerRef.current.createDataChannel("sendChannel");
+    sendChannel.current.onmessage = handleReceiveMessage;
+  }
+
+  function handleReceiveMessage(e) {
+    /* 
+      Add the received message to the messages state
+    */
+    setMessages(messages => [...messages, { yours: false, value: e.data }]);
+  }
+
+  function createPeer(userID) {
+    /* 
+      Create and configure a new RTCPeerConnection instance
+    */
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" } // STUN server for public IP discovery
+      ]
+    });
+    
+    /* 
+      Set event handlers for ICE candidates and negotiation needed
+    */
+    peer.onicecandidate = handleICECandidateEvent;
+    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
+
+    return peer;
+  }
+
+  function handleNegotiationNeededEvent(userID) {
+    /* 
+      Create and send an offer to the specified user
+    */
+    peerRef.current.createOffer().then(offer => {
+      return peerRef.current.setLocalDescription(offer);
+    }).then(() => {
+      const payload = {
+        target: userID,
+        caller: socketRef.current.id,
+        sdp: peerRef.current.localDescription
+      };
+      socketRef.current.emit('offer', payload);
+    }).catch(e => console.log('Negotiation error:', e));
+  }
+
+  function handleOffer(incoming) {
+    /* 
+      Handle an incoming offer, create an answer, and send it back
+    */
+    peerRef.current = createPeer();
+    peerRef.current.ondatachannel = (event) => {
+      sendChannel.current = event.channel;
+      sendChannel.current.onmessage = handleReceiveMessage;
+    };
+    const desc = new RTCSessionDescription(incoming.sdp);
+    peerRef.current.setRemoteDescription(desc).then(() => {
+      return peerRef.current.createAnswer();
+    }).then(answer => {
+      return peerRef.current.setLocalDescription(answer);
+    }).then(() => {
+      const payload = {
+        target: incoming.caller,
+        caller: socketRef.current.id,
+        sdp: peerRef.current.localDescription
+      };
+      socketRef.current.emit('answer', payload);
+    }).catch(e => console.log('Offer handling error:', e));
+  }
+
+  function handleAnswer(message) {
+    /* 
+      Handle an incoming answer from another peer
+    */
+    const desc = new RTCSessionDescription(message.sdp);
+    peerRef.current.setRemoteDescription(desc).catch(e => console.log('Answer error:', e));
+  }
+
+  function handleICECandidateEvent(e) {
+    if (e.candidate) {
+      /* 
+        Send the ICE candidate to the other user
+      */
+      const payload = {
+        target: otherUser.current,
+        candidate: e.candidate,
+      };
+      socketRef.current.emit('ice-candidate', payload);
     }
+  }
 
-    return () => {
-      if (socket.current) {
-        console.log('Removing you-are-callee listener');
-        socket.current.off('you-are-callee');
-      }
-    };
-  }, [isCaller]);
+  function handleNewICECandidateMsg(incoming) {
+    /* 
+      Add the received ICE candidate to the peer connection
+    */
+    const candidate = new RTCIceCandidate(incoming);
+    peerRef.current.addIceCandidate(candidate)
+      .catch(e => console.log('ICE candidate error:', e));
+  }
 
-  const createOffer = async () => {
-    console.log('Creating offer');
-    peerConnection.current = new RTCPeerConnection(iceServers);
-    peerConnection.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log('Sending ICE candidate:', event.candidate);
-        socket.current.emit('candidate', { room, candidate: event.candidate });
-      }
-    };
+  function handleChange(e) {
+    /* 
+      Update the input text state when the user types
+    */
+    setText(e.target.value);
+  }
 
-    const offer = await peerConnection.current.createOffer();
-    await peerConnection.current.setLocalDescription(offer);
-    console.log('Sending offer:', offer);
-    socket.current.emit('offer', { room, sdp: offer });
-  };
+  function sendMessage() {
+    /* 
+      Send a message through the data channel if the text is not empty
+    */
+    if (text.trim()) {
+      const newMessage = { value: text, yours: true };
+      setMessages(prevMessages => [...prevMessages, newMessage]);
+      sendChannel.current.send(text);
+      setText("");
+    }
+  }
+
+  function renderMessage(message, index) {
+    /* 
+      Render each message with appropriate background color
+    */
+    return (
+      <Box key={index} p={2} bg={message.yours ? "blue.100" : "gray.100"} borderRadius="md" mb={2}>
+        {message.value}
+      </Box>
+    );
+  }
 
   return (
-    <div>
-      Room: {room}
-    </div>
+    <Container maxW="container.md" p={4}>
+      <Stack spacing={4} mb={4} maxH="400px" overflowY="scroll">
+        {messages.map(renderMessage)}
+      </Stack>
+      <Textarea value={text} onChange={handleChange} placeholder="Say something....." mb={4} />
+      <Button onClick={sendMessage} colorScheme="teal">Send</Button>
+    </Container>
   );
 };
 
