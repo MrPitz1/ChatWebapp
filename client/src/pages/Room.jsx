@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Button, Container, Box, Stack, Textarea } from '@chakra-ui/react';
+import { Container, Stack, Textarea, Button, Flex, Box, Text } from '@chakra-ui/react';
 import io from "socket.io-client";
 
 const Room = () => {
@@ -190,6 +190,10 @@ const Room = () => {
 
   return (
     <Container maxW="container.md" p={4}>
+       <Flex justify="space-between" align="center" mb={4}>
+        <Box></Box> {/* Leerer Platzhalter */}
+        <Text fontWeight="bold">RoomID: {window.location.pathname.split('/')[2]}</Text>
+      </Flex>
       <Stack spacing={4} mb={4} maxH="400px" overflowY="scroll">
         {messages.map(renderMessage)}
       </Stack>

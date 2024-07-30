@@ -1,14 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Button, Input, Stack, Heading } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+
+function generateRoomId(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+  return result;
+}
 
 const JoinRoom = () => {
+  const [inputRoomId, setInputRoomId] = useState('');
   const navigate = useNavigate();
 
   const handleCreateRoom = () => {
-    const roomId = uuidv4();
+    const roomId = generateRoomId(6);
+    console.log(roomId);
     navigate(`/chat-room/${roomId}`);
+  };
+
+  const handleJoinRoom = () => {
+    if (inputRoomId) {
+      navigate(`/chat-room/${inputRoomId}`);
+    } else {
+      alert('Please enter a Room ID');
+    }
   };
 
   return (
@@ -23,8 +42,11 @@ const JoinRoom = () => {
       <Stack spacing={4} width="100%" maxWidth="400px" backgroundColor="white" padding="6" boxShadow="lg" borderRadius="md">
         <Heading as="h1" size="lg" textAlign="center">Room Management</Heading>
         <Button colorScheme="blue" onClick={handleCreateRoom}>Create Room</Button>
-        <Input placeholder="Enter Room ID" />
-        <Button colorScheme="green">Join Room</Button>
+        <Input
+          placeholder="Enter Room ID"
+          value={inputRoomId}
+          onChange={(e) => setInputRoomId(e.target.value)}
+        />        <Button colorScheme="green" onClick={handleJoinRoom}>Join Room</Button>
       </Stack>
     </Box>
   );
