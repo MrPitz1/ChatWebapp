@@ -1,17 +1,24 @@
+version: '3.8'
+
 services:
   backend:
     build:
       context: ./server
-      dockerfile: Dockerfile  # Name of the Dockerfile
+      dockerfile: Dockerfile
     ports:
-      - "4000"  # Only expose the internal port, not the external one
+      - "4000"
     environment:
       - NODE_ENV=production
       - PORT=4000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=example_db
+      - DB_USER=example_user
+      - DB_PASSWORD=example_password
     deploy:
-      replicas: 3  # Run multiple instances of the backend
+      replicas: 3
     networks:
       - app-network
 
@@ -20,7 +27,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"  # Expose the Frontend port to the host
+      - "3000:3000"
     networks:
       - app-network
     depends_on:
@@ -30,7 +37,7 @@ services:
     image: haproxy:latest
     container_name: haproxy
     ports:
-      - "4000:4000"  # Expose the HAProxy port to the host
+      - "4000:4000"
     volumes:
       - ./HAProxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     networks:
@@ -46,6 +53,25 @@ services:
     networks:
       - app-network
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example_root_password
+      MYSQL_DATABASE: example_db
+      MYSQL_USER: example_user
+      MYSQL_PASSWORD: example_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mysql_data:
