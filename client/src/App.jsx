@@ -4,6 +4,8 @@ import Index from './pages/Index';
 import AllChat from './pages/AllChat';
 import Room from './pages/Room'
 import JoinRoom from './pages/JoinRoom'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import {
   BrowserRouter as Router,
   Routes,
@@ -18,7 +20,9 @@ function App() {
             <Route index element={<Index/>} />
             <Route path='/all-chat' element={<AllChat/>} />
             <Route path='/join-room' element={<JoinRoom/>} /> 
-            <Route path='/chat-room/:uuid' element={<Room/>} />        
+            <Route path='/chat-room/:uuid' element={<Room/>} />
+            <Route path='/login' element={<Login/>} />
+            <Route path='/register' element={<Register/>} />           
           </Routes>
       </Router>
     </MainLayout>

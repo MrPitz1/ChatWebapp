@@ -70,7 +70,7 @@ function App() {
           direction={'row'}
           spacing={6}
         >
-          <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'#'}>
+          <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/login'}>
             Sign In
           </Button>
           <Button
@@ -80,7 +80,7 @@ function App() {
             fontWeight={600}
             color={'white'}
             bg={'purple.400'}
-            href={'#'}
+            href={'/register'}
             _hover={{
               bg: 'purple.300',
             }}
