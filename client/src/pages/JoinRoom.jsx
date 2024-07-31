@@ -26,14 +26,14 @@ const JoinRoom = () => {
   const handleCreateRoom = () => {
     const roomId = generateRoomId(6);
     console.log(roomId);
-    navigate(`/chat-room/${roomId}?username=${username}`);
+    navigate(`/chat-room/${roomId}?username=${username}&isInitiator=true`);
   };
   /* 
     Joins room with entered roomID
   */
   const handleJoinRoom = () => {
     if (inputRoomId) {
-      navigate(`/chat-room/${inputRoomId}?username=${username}`);
+      navigate(`/chat-room/${inputRoomId}?username=${username}&isInitiator=false`);
     } else {
       alert('Please enter a Room ID');
     }

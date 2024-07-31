@@ -9,7 +9,10 @@ const Room = () => {
   const roomID = window.location.pathname.split('/')[2];
   const queryParams = new URLSearchParams(window.location.search);
   const username = queryParams.get('username');
-  const [text, setText] = useState(""); 
+  const isInitiator = queryParams.get('isInitiator');
+  const [otherUsername, setOtherUsername] = useState(""); 
+  console.log(isInitiator);
+  const [text, setText] = useState("");
   const [messages, setMessages] = useState([]); 
   const sendChannel = useRef(); 
 
@@ -23,21 +26,23 @@ const Room = () => {
       /* 
         Join the room upon successful connection
       */
-      socketRef.current.emit('join room', roomID);
+      socketRef.current.emit('join room', { roomID, username });
     });
 
     /* 
       Handle the event where another user is found
     */
-    socketRef.current.on('other user', (userID) => {
-      callUser(userID);
+    socketRef.current.on('other user', (user) => {
+      callUser(user.id);
+      setOtherUsername(user.username);
     });
 
     /* 
       Handle the event where a new user joins the room
     */
-    socketRef.current.on('user joined', (userID) => {
-      otherUser.current = userID;
+    socketRef.current.on('user joined', (user) => {
+      otherUser.current = user.id;
+      setOtherUsername(user.username);
     });
 
     /* 
@@ -53,7 +58,7 @@ const Room = () => {
       */
       socketRef.current.disconnect();
     };
-  }, [roomID]);
+  }, [roomID, username]);
 
   function callUser(userID) {
     /* 
@@ -186,7 +191,7 @@ const Room = () => {
       return (
         <Box key={index} mb={2}>
           <Text fontWeight="bold" mb={1}>
-            {message.yours ? "me" : username}
+            {message.yours ? "me" : otherUsername}
           </Text>
           <Box p={2} bg={message.yours ? "blue.100" : "gray.100"} borderRadius="md">
             {message.value}
