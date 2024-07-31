@@ -81,14 +81,10 @@ allChatNamespace.on('connection', (socket) => {
   });
 
   socket.on('chat-message', (data) => {
-    /*
-        Message Event: Send Message to all Sockets of the Room
-    */
     const { message, room } = data;
     socket.to(room).emit('chat-message', message);
   });
 });
-
 
 // P2P namespace
 const peer2peerNamespace = io.of('/p2p');
@@ -98,18 +94,15 @@ peer2peerNamespace.on('connection', (socket) => {
   /*
       Connection init
   */
-  socket.on('join room', async (roomID) => {
+  socket.on('join room', async ({ roomID, username }) => {
     /*
       Join Event: Add Socket to the /all-chat Room
     */
-    // Add to room with redis adapter
     socket.join(roomID);
 
-    /* 
-    Add sockets to the room with a Redis Key-Value Store. This might seem redundant,
-    but it's necessary because Redis Rooms don't support retrieving sockets across 
-    all backend instances; they only return sockets on the local backend instance. 
-    */
+    // Store the username in the socket object
+    socket.username = username;
+
     await addSocketToRoom(`room:${roomID}`, socket.id);
 
     // Check if the room already has other users
@@ -117,43 +110,33 @@ peer2peerNamespace.on('connection', (socket) => {
     const otherUser = otherUsers.find(id => id !== socket.id);
 
     if (otherUser) {
-      // Notify the new user of the existing user
-      socket.emit("other user", otherUser);
-      // Notify the existing user that a new user has joined
-      socket.to(otherUser).emit("user joined", socket.id);
+      const otherSocket = peer2peerNamespace.sockets.get(otherUser);
+      if (otherSocket) {
+        // Notify the new user of the existing user
+        socket.emit("other user", { id: otherSocket.id, username: otherSocket.username });
+        // Notify the existing user that a new user has joined
+        socket.to(otherUser).emit("user joined", { id: socket.id, username });
+      }
     }
   });
 
   socket.on('offer', (payload) => {
-    /* 
-    Offer event
-    */
     socket.to(payload.target).emit('offer', payload);
   });
 
   socket.on('answer', (payload) => {
-    /*
-    Anser event
-    */
     socket.to(payload.target).emit('answer', payload);
   });
 
   socket.on('ice-candidate', (incoming) => {
-    /*
-    ice candidate event
-    */
     socket.to(incoming.target).emit('ice-candidate', incoming.candidate);
   });
 
   socket.on('disconnect', async () => {
-    /*
-      Disconnect Event
-    */
-    // Remove socket from all rooms in Redis Key Value Store
     const rooms = await redisClient.keys('room:*');
-    rooms.forEach(async (room) => {
-      await  removeSocketFromRoom(room, socket.id);
-    });
+    for (const room of rooms) {
+      await removeSocketFromRoom(room, socket.id);
+    }
   });
 });
 
