@@ -7,6 +7,8 @@ const Room = () => {
   const socketRef = useRef(); 
   const otherUser = useRef();
   const roomID = window.location.pathname.split('/')[2];
+  const queryParams = new URLSearchParams(window.location.search);
+  const username = queryParams.get('username');
   const [text, setText] = useState(""); 
   const [messages, setMessages] = useState([]); 
   const sendChannel = useRef(); 
@@ -181,11 +183,16 @@ const Room = () => {
     /* 
       Render each message with appropriate background color
     */
-    return (
-      <Box key={index} p={2} bg={message.yours ? "blue.100" : "gray.100"} borderRadius="md" mb={2}>
-        {message.value}
-      </Box>
-    );
+      return (
+        <Box key={index} mb={2}>
+          <Text fontWeight="bold" mb={1}>
+            {message.yours ? "me" : username}
+          </Text>
+          <Box p={2} bg={message.yours ? "blue.100" : "gray.100"} borderRadius="md">
+            {message.value}
+          </Box>
+        </Box>
+      );
   }
 
   return (
