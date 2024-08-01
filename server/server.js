@@ -6,7 +6,7 @@ const { createAdapter } = require('@socket.io/redis-adapter');
 const { Server } = require('socket.io');
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = process.env.REDIS_PORT || 6379;
 
