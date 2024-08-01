@@ -10,6 +10,9 @@ services:
       - PORT=4000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_URI=mongodb://mongodb:27017/myDatabase  # Verbindungs-String zur MongoDB
     deploy:
       replicas: 3  # Run multiple instances of the backend
     networks:
@@ -46,6 +49,21 @@ services:
     networks:
       - app-network
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d/  # Initialisierungsskripte einbinden
+
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
