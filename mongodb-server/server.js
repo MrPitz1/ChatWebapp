@@ -9,7 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 7000;
 const TOKEN_SECRET = process.env.TOKEN_SECRET || 'your_jwt_secret'; // Ensure this is set in your environment variables
 
-app.use(cors()); // Enable CORS
+// Configure CORS to allow credentials
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Parse JSON request bodies
 
 const validatePassword = (password) => {
@@ -62,11 +63,13 @@ app.post('/login', async (req, res) => {
     const user = await Users.findOne({ username });
 
     if (!user) {
+      console.log('Invalid credentials: User not found');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      console.log('Invalid credentials: Incorrect password');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
@@ -77,11 +80,16 @@ app.post('/login', async (req, res) => {
 
     const token = jwt.sign(tokenData, TOKEN_SECRET, { expiresIn: '1d' });
 
-    res.cookie('token', token, { httpOnly: true });
-    res.cookie('username', user.username);
+    // Set cookies
+    res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'Lax' });
+    res.cookie('username', user.username, { secure: false, sameSite: 'Lax' });
+
+    // For debugging purposes, store the cookies in the response
+    console.log(`Cookies set for user ${user.username}: token=${token}, username=${user.username}`);
 
     return res.status(200).json({ message: 'Login successful' });
   } catch (e) {
+    console.error(e);
     return res.status(500).json({ error: e.message });
   }
 });

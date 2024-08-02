@@ -11,10 +11,15 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:4000/login', { username, password });
+      const response = await axios.post(
+        'http://localhost:4000/login',
+        { username, password },
+        { withCredentials: true } // This is crucial for including cookies in the request
+      );
       if (response.status === 200) {
         // Handle successful login
         console.log('Login successful');
+        navigate('/');
       }
     } catch (error) {
       setError('Login failed. Please try again.');
