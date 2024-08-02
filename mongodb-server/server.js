@@ -57,12 +57,10 @@ app.post('/server/register', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Validate Username
     if (!validateUsername(username)) {
       return res.status(400).json({ message: 'Username does not meet the requirements' });
     }
 
-    // Validate Password
     if (!validatePassword(password)) {
       return res.status(400).json({ message: 'Password does not meet the requirements' });
     }
@@ -156,6 +154,35 @@ app.post('/server/addfriend', async (req, res) => {
   } catch (error) {
     console.error('Error adding friend:', error);
     return res.status(500).json({ message: 'An error occurred while adding the friend' });
+  }
+});
+
+app.get('/server/friendships', async (req, res) => {
+  const { username } = req.query;
+
+  console.log('Received username:', username);
+
+  try {
+    await connectMongoDB();
+    console.log('Connected to MongoDB');
+
+    const friendships = await Friendship.find({
+      $or: [
+        { user1: username },
+        { user2: username }
+      ]
+    });
+
+    console.log('Found friendships:', friendships);
+
+    if (friendships.length === 0) {
+      return res.status(404).json({ message: 'No friendships found for the given username' });
+    }
+
+    return res.status(200).json(friendships);
+  } catch (error) {
+    console.error('Error fetching friendships:', error);
+    return res.status(500).json({ message: 'An error occurred while fetching the friendships' });
   }
 });
 

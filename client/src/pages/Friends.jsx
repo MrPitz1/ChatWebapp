@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Input, Stack, Heading } from '@chakra-ui/react';
+import { Box, Button, Input, Stack, Heading, Text, Flex } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const Friends = () => {
   const [username, setUsername] = useState(null);
   const [friendUsername, setFriendUsername] = useState('');
   const [error, setError] = useState('');
+  const [friendships, setFriendships] = useState([]);
 
   useEffect(() => {
     const username = Cookies.get('username');
     if (username) {
       setUsername(username);
+      fetchFriendships(username);
     }
   }, []);
+
+  const fetchFriendships = async (username) => {
+    try {
+      const response = await axios.get('http://localhost:4000/server/friendships', {
+        params: { username }
+      });
+      setFriendships(response.data);
+    } catch (error) {
+      console.error('Error fetching friendships:', error);
+    }
+  };
 
   const handleAddFriend = async () => {
     try {
@@ -24,6 +38,7 @@ const Friends = () => {
       if (response.status === 201) {
         console.log('Friend added successfully');
         setError('');
+        fetchFriendships(username);
       }
     } catch (error) {
       if (error.response && error.response.status === 409) {
@@ -52,6 +67,18 @@ const Friends = () => {
         />
         <Button colorScheme="blue" onClick={handleAddFriend}>Add Friend</Button>
         {error && <Box color="red.500">{error}</Box>}
+
+        <Heading as="h2" size="md" textAlign="center" marginTop="4">Existing Friendships</Heading>
+        <Box>
+          {friendships.map((friendship) => (
+            <Flex key={friendship.friendshipId} alignItems="center" justifyContent="space-between" marginY="2">
+              <Text>{friendship.user1} and {friendship.user2}</Text>
+              <Link to={`/chat-room/${friendship.friendshipId}`}>
+                <Button colorScheme="teal" size="sm">Go to Chat</Button>
+              </Link>
+            </Flex>
+          ))}
+        </Box>
       </Stack>
     </Box>
   );
