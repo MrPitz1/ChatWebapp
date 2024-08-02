@@ -11,6 +11,8 @@ import {
 import MainLayout from './components/Layout';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import Friends from './pages/Friends';
+
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
             <Route path='/chat-room/:uuid' element={<Room/>} />
             <Route path='/login' element={<Login/>} />
             <Route path='/register' element={<Register/>} />
+            <Route path='/friends' element={<Friends/>} />
+
           </Routes>
       </Router>
     </MainLayout>
