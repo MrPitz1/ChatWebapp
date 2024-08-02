@@ -1,30 +1,30 @@
-db = db.getSiblingDB('myDatabase');  // Ersetzen Sie 'myDatabase' durch den gewünschten Datenbanknamen
+db = db.getSiblingDB('myDatabase');  // Replace 'myDatabase' with your desired database name
 
-// Erstellen der Kollektion 'user_profiles' falls nicht vorhanden
+// Create the 'user_profiles' collection if it does not exist
 if (!db.getCollectionNames().includes('user_profiles')) {
   db.createCollection('user_profiles');
 }
 
-// Optionale Validierung für die Felder 'name' und 'password' hinzufügen
+// Optional validation for the 'username' and 'password' fields
 db.runCommand({
   collMod: 'user_profiles',
   validator: {
     $jsonSchema: {
       bsonType: 'object',
-      required: ['name', 'password'],
+      required: ['username', 'password'],
       properties: {
-        name: {
+        username: {
           bsonType: 'string',
-          description: 'Muss ein String sein und ist erforderlich'
+          description: 'Must be a string and is required'
         },
         password: {
           bsonType: 'string',
-          description: 'Muss ein String sein und ist erforderlich'
+          description: 'Must be a string and is required'
         }
       }
     }
   }
 });
 
-// Einfügen eines Beispiel-Dokuments zur Verifizierung der Kollektionserstellung
-db.user_profiles.insertOne({ name: 'sampleName', password: 'samplePassword' });
+// Insert a sample document to verify the collection creation
+db.user_profiles.insertOne({ username: 'sampleUsername', password: 'samplePassword' });
