@@ -12,7 +12,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/login',
+        'http://localhost:4000/server/login',
         { username, password },
         { withCredentials: true } // This is crucial for including cookies in the request
       );

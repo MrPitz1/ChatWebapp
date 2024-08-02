@@ -11,7 +11,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('http://localhost:4000/register', { username, password });
+      const response = await axios.post('http://localhost:4000/server/register', { username, password });
       if (response.status === 201) {
         navigate('/login');
       }

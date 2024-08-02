@@ -4,23 +4,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const connectMongoDB = require('./lib/mongodb');
 const Users = require('./models/Users');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 'your_jwt_secret'; // Ensure this is set in your environment variables
+const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
-// Configure CORS to allow credentials
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json()); // Parse JSON request bodies
-
+app.use(express.json());
 const validatePassword = (password) => {
   const minLength = 8;
+  const maxLength = 20; // Maximum length for the password
   const hasNumber = /\d/;
   const hasUpperCase = /[A-Z]/;
   const hasLowerCase = /[a-z]/;
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
   return (
     password.length >= minLength &&
+    password.length <= maxLength &&
     hasNumber.test(password) &&
     hasUpperCase.test(password) &&
     hasLowerCase.test(password) &&
@@ -28,9 +29,25 @@ const validatePassword = (password) => {
   );
 };
 
-app.post('/register', async (req, res) => {
+const validateUsername = (username) => {
+  const minLength = 3;
+  const maxLength = 20;
+  const isValid = /^[a-zA-Z0-9_]+$/.test(username); // Allows only alphanumeric characters and underscores
+  return (
+    username.length >= minLength &&
+    username.length <= maxLength &&
+    isValid
+  );
+};
+
+app.post('/server/register', async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    // Validate Username
+    if (!validateUsername(username)) {
+      return res.status(400).json({ message: 'Username does not meet the requirements' });
+    }
 
     // Validate Password
     if (!validatePassword(password)) {
@@ -54,7 +71,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/server/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -80,11 +97,9 @@ app.post('/login', async (req, res) => {
 
     const token = jwt.sign(tokenData, TOKEN_SECRET, { expiresIn: '1d' });
 
-    // Set cookies
     res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'Lax' });
     res.cookie('username', user.username, { secure: false, sameSite: 'Lax' });
 
-    // For debugging purposes, store the cookies in the response
     console.log(`Cookies set for user ${user.username}: token=${token}, username=${user.username}`);
 
     return res.status(200).json({ message: 'Login successful' });
