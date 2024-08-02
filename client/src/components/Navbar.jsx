@@ -1,4 +1,5 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Flex,
@@ -21,9 +22,18 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from '@chakra-ui/icons';
+import Cookies from 'js-cookie';
 
 function App() {
   const { isOpen, onToggle } = useDisclosure();
+  const [username, setUsername] = useState(null);
+
+  useEffect(() => {
+    const username = Cookies.get('username');
+    if (username) {
+      setUsername(username);
+    }
+  }, []);
 
   return (
     <Box>
@@ -70,23 +80,31 @@ function App() {
           direction={'row'}
           spacing={6}
         >
-          <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'#'}>
-            Sign In
-          </Button>
-          <Button
-            as={'a'}
-            display={{ base: 'none', md: 'inline-flex' }}
-            fontSize={'sm'}
-            fontWeight={600}
-            color={'white'}
-            bg={'purple.400'}
-            href={'#'}
-            _hover={{
-              bg: 'purple.300',
-            }}
-          >
-            Sign Up
-          </Button>
+          {username ? (
+            <Button fontSize={'sm'} fontWeight={400} variant={'link'}>
+              {username}
+            </Button>
+          ) : (
+            <>
+              <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/login'}>
+                Sign In
+              </Button>
+              <Button
+                as={'a'}
+                display={{ base: 'none', md: 'inline-flex' }}
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'purple.400'}
+                href={'/register'}
+                _hover={{
+                  bg: 'purple.300',
+                }}
+              >
+                Sign Up
+              </Button>
+            </>
+          )}
         </Stack>
       </Flex>
 
