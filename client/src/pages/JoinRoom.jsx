@@ -17,7 +17,6 @@ function generateRoomId(length) {
 
 const JoinRoom = () => {
   const [inputRoomId, setInputRoomId] = useState('');
-  const [username, setUsername] = useState('');
   const navigate = useNavigate();
 
   /* 
@@ -26,14 +25,14 @@ const JoinRoom = () => {
   const handleCreateRoom = () => {
     const roomId = generateRoomId(6);
     console.log(roomId);
-    navigate(`/chat-room/${roomId}?username=${username}&isInitiator=true`);
+    navigate(`/chat-room/${roomId}`);
   };
   /* 
     Joins room with entered roomID
   */
   const handleJoinRoom = () => {
     if (inputRoomId) {
-      navigate(`/chat-room/${inputRoomId}?username=${username}&isInitiator=false`);
+      navigate(`/chat-room/${inputRoomId}`);
     } else {
       alert('Please enter a Room ID');
     }
@@ -55,13 +54,7 @@ const JoinRoom = () => {
           placeholder="Enter Room ID"
           value={inputRoomId}
           onChange={(e) => setInputRoomId(e.target.value)}
-        />        
-        <Input
-          placeholder="Enter Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <Button colorScheme="green" onClick={handleJoinRoom}>Join Room</Button>
+        />        <Button colorScheme="green" onClick={handleJoinRoom}>Join Room</Button>
       </Stack>
     </Box>
   );
