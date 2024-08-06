@@ -1,15 +1,16 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Container, Stack, Textarea, Button, Flex, Box, Text } from '@chakra-ui/react';
+import { Container, Stack, Textarea, Button, Flex, Box, Text, Spinner, VStack } from '@chakra-ui/react';
 import io from "socket.io-client";
 
 const Room = () => {
-  const peerRef = useRef(); 
-  const socketRef = useRef(); 
+  const peerRef = useRef();
+  const socketRef = useRef();
   const otherUser = useRef();
   const roomID = window.location.pathname.split('/')[2];
-  const [text, setText] = useState(""); 
-  const [messages, setMessages] = useState([]); 
-  const sendChannel = useRef(); 
+  const [text, setText] = useState("");
+  const [messages, setMessages] = useState([]);
+  const sendChannel = useRef();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     /* 
@@ -22,17 +23,18 @@ const Room = () => {
         Join the room upon successful connection
       */
       socketRef.current.emit('join room', roomID);
+      setLoading(false);
     });
 
     /* 
-      Handle the event where another user is found
+      Handle the event when another user is found
     */
     socketRef.current.on('other user', (userID) => {
       callUser(userID);
     });
 
     /* 
-      Handle the event where a new user joins the room
+      Handle the event when a new user joins the room
     */
     socketRef.current.on('user joined', (userID) => {
       otherUser.current = userID;
@@ -190,12 +192,19 @@ const Room = () => {
 
   return (
     <Container maxW="container.md" p={4}>
-       <Flex justify="space-between" align="center" mb={4}>
-        <Box></Box> {/* Leerer Platzhalter */}
+      <Flex justify="space-between" align="center" mb={4}>
+        <Box></Box> {/* Placeholder */}
         <Text fontWeight="bold">RoomID: {window.location.pathname.split('/')[2]}</Text>
       </Flex>
       <Stack spacing={4} mb={4} maxH="400px" overflowY="scroll">
-        {messages.map(renderMessage)}
+        {loading ? (
+          <VStack justify="center" align="center" h="full">
+            <Spinner size="lg" />
+            <Text mt={4}>Connecting...</Text>
+          </VStack>
+        ) : (
+          messages.map(renderMessage)
+        )}
       </Stack>
       <Textarea value={text} onChange={handleChange} placeholder="Say something....." mb={4} />
       <Button onClick={sendMessage} colorScheme="teal">Send</Button>
