@@ -17,7 +17,7 @@ const AllChat = () => {
 
   useEffect(() => {
     // Create new WebSocket
-    const newSocket = io('http://localhost:4000/all-chat', {
+    const newSocket = io('/socket/all-chat', {
       transports: ['websocket'],
     });
     socket.current = newSocket;

@@ -55,7 +55,7 @@ async function getRoomMembers(room) {
 }
 
 // Define the /all-chat namespace
-const allChatNamespace = io.of('/all-chat');
+const allChatNamespace = io.of('/socket/all-chat');
 
 // Client Server Architecture
 allChatNamespace.on('connection', (socket) => {
@@ -91,7 +91,7 @@ allChatNamespace.on('connection', (socket) => {
 
 
 // P2P namespace
-const peer2peerNamespace = io.of('/p2p');
+const peer2peerNamespace = io.of('/socket/p2p');
 
 // Peer to peer architecture
 peer2peerNamespace.on('connection', (socket) => {

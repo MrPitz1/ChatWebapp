@@ -2,9 +2,9 @@ services:
   socket-server:
     build:
       context: ./server/socket-server
-      dockerfile: Dockerfile  # Name of the Dockerfile
+      dockerfile: Dockerfile
     ports:
-      - "5000"  # Only expose the internal port, not the external one
+      - "5000"
     environment:
       - NODE_ENV=production
       - PORT=5000
@@ -14,7 +14,7 @@ services:
       - MONGO_PORT=27017
       - MONGO_URI=mongodb://mongodb:27017/myDatabase
     deploy:
-      replicas: 3  # Run multiple instances of the socket-server
+      replicas: 3
     networks:
       - app-network
 
@@ -31,24 +31,25 @@ services:
     networks:
       - app-network
     deploy:
-      replicas: 3  # Run multiple instances of the backend-server
+      replicas: 3
 
   frontend:
     build:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"  # Expose the Frontend port to the host
+      - "3000"
     networks:
       - app-network
     depends_on:
       - socket-server
-
+    deploy:
+      replicas: 3 
   haproxy:
     image: haproxy:latest
     container_name: haproxy
     ports:
-      - "4000:4000"  # Expose the HAProxy port to the host
+      - "4000:4000"
     volumes:
       - ./HAProxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     networks:
@@ -56,6 +57,7 @@ services:
     depends_on:
       - socket-server
       - backend-server
+      - frontend  
 
   redis:
     image: redis:latest
@@ -74,7 +76,6 @@ services:
       - app-network
     volumes:
       - mongo-data:/data/db
-      - ./mongo-init:/docker-entrypoint-initdb.d/  # Initialisierungsskripte einbinden
 
 networks:
   app-network:

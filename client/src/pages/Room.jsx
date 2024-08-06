@@ -15,7 +15,7 @@ const Room = () => {
     /* 
       Connect to the Socket.IO server and join the specified room
     */
-    socketRef.current = io.connect("http://localhost:4000/p2p", { transports: ['websocket'] });
+    socketRef.current = io.connect("/socket/p2p", { transports: ['websocket'] });
 
     socketRef.current.on('connect', () => {
       /* 

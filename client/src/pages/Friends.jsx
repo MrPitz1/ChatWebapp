@@ -20,7 +20,7 @@ const Friends = () => {
 
   const fetchFriendships = async (username) => {
     try {
-      const response = await axios.get('http://localhost:4000/server/friendships', {
+      const response = await axios.get('/server/friendships', {
         params: { username }
       });
       setFriendships(response.data);
@@ -32,7 +32,7 @@ const Friends = () => {
   const handleAddFriend = async () => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/server/addfriend',
+        '/server/addfriend',
         { username, friendUsername }
       );
       if (response.status === 201) {
