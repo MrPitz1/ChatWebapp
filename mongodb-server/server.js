@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 const connectMongoDB = require('./lib/mongodb');
 const Users = require('./models/Users');
-const crypto = require('crypto');
+const Friendship = require('./models/Friendship');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -12,9 +14,10 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
+
 const validatePassword = (password) => {
   const minLength = 8;
-  const maxLength = 20; // Maximum length for the password
+  const maxLength = 20;
   const hasNumber = /\d/;
   const hasUpperCase = /[A-Z]/;
   const hasLowerCase = /[a-z]/;
@@ -32,7 +35,7 @@ const validatePassword = (password) => {
 const validateUsername = (username) => {
   const minLength = 3;
   const maxLength = 20;
-  const isValid = /^[a-zA-Z0-9_]+$/.test(username); // Allows only alphanumeric characters and underscores
+  const isValid = /^[a-zA-Z0-9_]+$/.test(username);
   return (
     username.length >= minLength &&
     username.length <= maxLength &&
@@ -40,28 +43,36 @@ const validateUsername = (username) => {
   );
 };
 
+const friendshipExists = async (user1, user2) => {
+  const existingFriendship = await Friendship.findOne({
+    $or: [
+      { user1, user2 },
+      { user1: user2, user2: user1 }
+    ]
+  });
+  return !!existingFriendship;
+};
+
 app.post('/server/register', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Validate Username
     if (!validateUsername(username)) {
       return res.status(400).json({ message: 'Username does not meet the requirements' });
     }
 
-    // Validate Password
     if (!validatePassword(password)) {
       return res.status(400).json({ message: 'Password does not meet the requirements' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
     await connectMongoDB();
 
-    const user_exists = await Users.findOne({ username }).select('_id');
-    if (user_exists) {
-      return res.status(404).json({ message: 'User already exists' });
+    const userExists = await Users.findOne({ username });
+    if (userExists) {
+      return res.status(409).json({ message: 'Username already exists' });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     await Users.create({ username, password: hashedPassword });
     return res.status(201).json({ message: 'User registered successfully' });
@@ -106,6 +117,70 @@ app.post('/server/login', async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/server/addfriend', async (req, res) => {
+  const { username, friendUsername } = req.body;
+
+  if (!username || !friendUsername) {
+    return res.status(400).json({ message: 'Both usernames are required' });
+  }
+  if (username == friendUsername) {
+    return res.status(469).json({ message: 'You cant add yourself as a friend' });
+  }
+  try {
+    await connectMongoDB();
+
+    const user = await Users.findOne({ username });
+    const friend = await Users.findOne({ username: friendUsername });
+
+    if (!user || !friend) {
+      return res.status(404).json({ message: 'One or both users do not exist' });
+    }
+
+    if (await friendshipExists(username, friendUsername)) {
+      return res.status(409).json({ message: 'Friendship already exists' });
+    }
+
+    const friendshipId = uuidv4();
+    const newFriendship = new Friendship({
+      friendshipId,
+      user1: username,
+      user2: friendUsername,
+    });
+
+    await newFriendship.save();
+
+    return res.status(201).json({ message: 'Friend added successfully', friendshipId });
+  } catch (error) {
+    console.error('Error adding friend:', error);
+    return res.status(500).json({ message: 'An error occurred while adding the friend' });
+  }
+});
+
+app.get('/server/friendships', async (req, res) => {
+  const { username } = req.query;
+
+  console.log('Received username:', username);
+
+  try {
+    await connectMongoDB();
+    console.log('Connected to MongoDB');
+
+    const friendships = await Friendship.find({
+      $or: [
+        { user1: username },
+        { user2: username }
+      ]
+    });
+
+    console.log('Found friendships:', friendships);
+
+    return res.status(200).json(friendships);
+  } catch (error) {
+    console.error('Error fetching friendships:', error);
+    return res.status(500).json({ message: 'An error occurred while fetching the friendships' });
   }
 });
 

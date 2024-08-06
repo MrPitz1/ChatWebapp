@@ -27,7 +27,12 @@ import Cookies from 'js-cookie';
 function App() {
   const { isOpen, onToggle } = useDisclosure();
   const [username, setUsername] = useState(null);
-
+  if(username) {
+    NAV_ITEMS.push({
+      label: 'Friends',
+      href: '/friends',
+    });
+  }
   useEffect(() => {
     const username = Cookies.get('username');
     if (username) {
@@ -292,5 +297,6 @@ const NAV_ITEMS = [
     href: '/all-chat',
   },
 ];
+
 
 export default App;
