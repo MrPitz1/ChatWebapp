@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
-  backend:
+  socket-server:
     build:
-      context: ./server
+      context: ./server/socket-server
       dockerfile: Dockerfile  # Name of the Dockerfile
     ports:
       - "5000"  # Only expose the internal port, not the external one
@@ -16,13 +14,13 @@ services:
       - MONGO_PORT=27017
       - MONGO_URI=mongodb://mongodb:27017/myDatabase
     deploy:
-      replicas: 3  # Run multiple instances of the backend
+      replicas: 3  # Run multiple instances of the socket-server
     networks:
       - app-network
 
-  mongodb-server:
+  backend-server:
     build:
-      context: ./mongodb-server
+      context: ./server/backend-server
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
@@ -33,7 +31,7 @@ services:
     networks:
       - app-network
     deploy:
-      replicas: 3  # Run multiple instances of the mongodb-server
+      replicas: 3  # Run multiple instances of the backend-server
 
   frontend:
     build:
@@ -44,7 +42,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend
+      - socket-server
 
   haproxy:
     image: haproxy:latest
@@ -56,8 +54,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend
-      - mongodb-server
+      - socket-server
+      - backend-server
 
   redis:
     image: redis:latest
