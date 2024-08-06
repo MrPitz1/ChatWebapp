@@ -1,4 +1,5 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Flex,
@@ -21,9 +22,23 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from '@chakra-ui/icons';
+import Cookies from 'js-cookie';
 
 function App() {
   const { isOpen, onToggle } = useDisclosure();
+  const [username, setUsername] = useState(null);
+  if(username) {
+    NAV_ITEMS.push({
+      label: 'Friends',
+      href: '/friends',
+    });
+  }
+  useEffect(() => {
+    const username = Cookies.get('username');
+    if (username) {
+      setUsername(username);
+    }
+  }, []);
 
   return (
     <Box>
@@ -70,23 +85,31 @@ function App() {
           direction={'row'}
           spacing={6}
         >
-          <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'#'}>
-            Sign In
-          </Button>
-          <Button
-            as={'a'}
-            display={{ base: 'none', md: 'inline-flex' }}
-            fontSize={'sm'}
-            fontWeight={600}
-            color={'white'}
-            bg={'purple.400'}
-            href={'#'}
-            _hover={{
-              bg: 'purple.300',
-            }}
-          >
-            Sign Up
-          </Button>
+          {username ? (
+            <Button fontSize={'sm'} fontWeight={400} variant={'link'}>
+              {username}
+            </Button>
+          ) : (
+            <>
+              <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/login'}>
+                Sign In
+              </Button>
+              <Button
+                as={'a'}
+                display={{ base: 'none', md: 'inline-flex' }}
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'purple.400'}
+                href={'/register'}
+                _hover={{
+                  bg: 'purple.300',
+                }}
+              >
+                Sign Up
+              </Button>
+            </>
+          )}
         </Stack>
       </Flex>
 
@@ -247,19 +270,8 @@ function MobileNavItem({ label, children, href }) {
 
 const NAV_ITEMS = [
   {
-    label: 'Test',
-    children: [
-      {
-        label: 'Test1',
-        subLabel: 'Test Description 1',
-        href: '#',
-      },
-      {
-        label: 'Test2',
-        subLabel: 'Test Description 2',
-        href: '#',
-      },
-    ],
+    label: 'P2P Chat',
+    href: '/join-room'
   },
   {
     label: 'Test3',
@@ -281,9 +293,10 @@ const NAV_ITEMS = [
     href: '#',
   },
   {
-    label: 'Test7',
-    href: '#',
+    label: 'AllChat',
+    href: '/all-chat',
   },
 ];
+
 
 export default App;
