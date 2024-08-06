@@ -86,7 +86,7 @@ function App() {
           spacing={6}
         >
           {username ? (
-            <Button fontSize={'sm'} fontWeight={400} variant={'link'}>
+            <Button  as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/profile'}>
               {username}
             </Button>
           ) : (
