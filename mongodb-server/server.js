@@ -126,7 +126,9 @@ app.post('/server/addfriend', async (req, res) => {
   if (!username || !friendUsername) {
     return res.status(400).json({ message: 'Both usernames are required' });
   }
-
+  if (username == friendUsername) {
+    return res.status(469).json({ message: 'You cant add yourself as a friend' });
+  }
   try {
     await connectMongoDB();
 
@@ -174,10 +176,6 @@ app.get('/server/friendships', async (req, res) => {
     });
 
     console.log('Found friendships:', friendships);
-
-    if (friendships.length === 0) {
-      return res.status(404).json({ message: 'No friendships found for the given username' });
-    }
 
     return res.status(200).json(friendships);
   } catch (error) {
