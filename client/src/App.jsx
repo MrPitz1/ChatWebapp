@@ -12,6 +12,7 @@ import MainLayout from './components/Layout';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Friends from './pages/Friends';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -26,6 +27,8 @@ function App() {
             <Route path='/login' element={<Login/>} />
             <Route path='/register' element={<Register/>} />
             <Route path='/friends' element={<Friends/>} />
+            <Route path='/profile' element={<Profile/>} />
+
 
           </Routes>
       </Router>
