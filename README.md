@@ -26,3 +26,9 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
 
    ```bash
    docker-compose up
+
+## Architektur
+#### Overview
+![plot](./images/Architecture.png)
+#### Peer to Peer State Diagramm
+![plot](./images/p2p-state-diagramm.png)
