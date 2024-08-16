@@ -32,3 +32,5 @@
 # typescript
 /chat-webapp/*.tsbuildinfo
 /chat-webapp/next-env.d.ts
+
+.env
