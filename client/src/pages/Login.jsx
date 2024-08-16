@@ -19,7 +19,7 @@ const Login = () => {
       if (response.status === 200) {
         // Handle successful login
         console.log('Login successful');
-        navigate('/');
+        window.location.href = '/'; 
       }
     } catch (error) {
       setError('Login failed. Please try again.');

@@ -1,36 +1,25 @@
 import React, { useState } from 'react';
 import { Box, Button, Input, Stack, Heading } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-
- /* 
-    Function to create random string
- */
-function generateRoomId(length) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    result += characters.charAt(randomIndex);
-  }
-  return result;
-}
+import { v4 as uuidv4 } from 'uuid';
 
 const JoinRoom = () => {
   const [inputRoomId, setInputRoomId] = useState('');
   const navigate = useNavigate();
 
-  /* 
-    Creates room with random 6-figure roomID when triggered
-  */
   const handleCreateRoom = () => {
-    const roomId = generateRoomId(6);
+    /*
+      Join unique Room
+    */
+    const roomId = uuidv4();
     console.log(roomId);
     navigate(`/chat-room/${roomId}`);
   };
-  /* 
-    Joins room with entered roomID
-  */
+
   const handleJoinRoom = () => {
+     /* 
+      Joins room with entered roomID
+     */
     if (inputRoomId) {
       navigate(`/chat-room/${inputRoomId}`);
     } else {
