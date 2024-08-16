@@ -30,6 +30,6 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
 
 ## Architektur
 #### Overview
-![plot](./images/Architecture.png)
+![plot](./images/Architecture_updated.png)
 #### Peer to Peer State Diagramm
 ![plot](./images/p2p-state-diagramm.png)
