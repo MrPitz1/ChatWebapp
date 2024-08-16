@@ -26,6 +26,8 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
    ```bash
    docker-compose up
 
+4. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 3000)
+
 ## Architektur
 #### Overview
 ![plot](./images/Architecture.png)
