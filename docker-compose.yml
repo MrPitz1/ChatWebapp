@@ -62,8 +62,6 @@ services:
       - NGINX_PORT=${NGINX_PORT}
       - REDIS_PORT=${REDIS_PORT}
       - MONGODB_PORT=${MONGODB_PORT}
-    volumes:
-      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
     networks:
       - app-network
     depends_on:
