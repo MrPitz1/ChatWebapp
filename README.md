@@ -12,7 +12,6 @@ Dieses Projekt zielt darauf ab, eine Chat-Webanwendung zu entwickeln, die Peer-t
 - **Normaler Chat:** Einzelne Benutzer können miteinander chatten.
 - **Gruppenchat:** Mehrere Benutzer können in einem gemeinsamen Chatraum kommunizieren.
 - **Anonymer Chat:** Option für anonyme Kommunikation zwischen Benutzern.
-- **(Videoanruf):** Gegebenenfalls wird die Unterstützung für Videoanrufe implementiert.
 
 ## Installation und Ausführung
 
