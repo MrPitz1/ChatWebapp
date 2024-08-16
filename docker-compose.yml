@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   socket-server:
     build:
@@ -14,7 +12,7 @@ services:
       - MONGO_URI=${MONGODB_URI}
       - PORT=${SOCKET_SERVER_PORT}
     deploy:
-      replicas: 3
+      replicas: ${SOCKET_REPLICAS}
     networks:
       - app-network
 
@@ -33,7 +31,7 @@ services:
     networks:
       - app-network
     deploy:
-      replicas: 3
+      replicas: ${BACKEND_REPLICAS}
 
   frontend:
     build:
@@ -46,7 +44,7 @@ services:
     depends_on:
       - socket-server
     deploy:
-      replicas: 3
+      replicas: ${FRONTEND_REPLICAS}
 
   nginx:
     build:
