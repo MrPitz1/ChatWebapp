@@ -12,7 +12,6 @@ Dieses Projekt zielt darauf ab, eine Chat-Webanwendung zu entwickeln, die Peer-t
 - **Normaler Chat:** Einzelne Benutzer können miteinander chatten.
 - **Gruppenchat:** Mehrere Benutzer können in einem gemeinsamen Chatraum kommunizieren.
 - **Anonymer Chat:** Option für anonyme Kommunikation zwischen Benutzern.
-- **(Videoanruf):** Gegebenenfalls wird die Unterstützung für Videoanrufe implementiert.
 
 ## Installation und Ausführung
 
@@ -27,8 +26,10 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
    ```bash
    docker-compose up
 
+4. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 3000)
+
 ## Architektur
 #### Overview
-![plot](./images/Architecture.png)
+![plot](./images/architecture.png)
 #### Peer to Peer State Diagramm
 ![plot](./images/p2p-state-diagramm.png)

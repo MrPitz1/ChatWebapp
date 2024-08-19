@@ -23,8 +23,5 @@ RUN npm run build
 # Install a lightweight web server for serving static files
 RUN npm install -g serve
 
-# Expose port 3000
-EXPOSE 3000
-
 # Start the app using serve
 CMD ["serve", "-s", "dist", "-l", "3000"]
