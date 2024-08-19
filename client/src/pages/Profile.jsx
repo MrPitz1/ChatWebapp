@@ -20,7 +20,7 @@ const Profile = () => {
   const handleLogout = () => {
     Cookies.remove('username');
     Cookies.remove('token');
-    navigate('/login');
+    window.location.href = '/login'; 
   };
 
   if (!isAuthChecked) {
