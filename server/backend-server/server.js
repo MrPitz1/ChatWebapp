@@ -9,10 +9,11 @@ const Users = require('./models/Users');
 const Friendship = require('./models/Friendship');
 
 const app = express();
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT;
+const NGINX_PORT = process.env.NGINX_PORT;
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
-app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
+app.use(cors({ origin: `http://localhost:${NGINX_PORT}`, credentials: true }));
 app.use(express.json());
 
 const validatePassword = (password) => {

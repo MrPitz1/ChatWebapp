@@ -13,8 +13,5 @@ RUN npm install --quiet
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Expose the port on which the application runs
-EXPOSE 4000
-
 # Start the application
 CMD ["node", "server.js"]
