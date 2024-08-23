@@ -66,13 +66,11 @@ function App() {
           />
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }}>
-          <Text
-            textAlign={useBreakpointValue({ base: 'center', md: 'left' })}
-            fontFamily={'heading'}
-            color={useColorModeValue('gray.800', 'white')}
+          <Button
+          as={'a'} fontSize={'m'} fontWeight={800} variant={'link'} href={'/'} color={'purple.600'}
           >
-            Logo
-          </Text>
+            P2P
+          </Button>
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <DesktopNav />
@@ -86,12 +84,12 @@ function App() {
           spacing={6}
         >
           {username ? (
-            <Button  as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/profile'}>
+            <Button  as={'a'} fontSize={'sm'} fontWeight={600} variant={'link'} href={'/profile'} color={'purple.600'}>
               {username}
             </Button>
           ) : (
             <>
-              <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/login'}>
+              <Button as={'a'} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/login'} color={'purple.600'}>
                 Sign In
               </Button>
               <Button
@@ -100,7 +98,7 @@ function App() {
                 fontSize={'sm'}
                 fontWeight={600}
                 color={'white'}
-                bg={'purple.400'}
+                bg={'purple.600'}
                 href={'/register'}
                 _hover={{
                   bg: 'purple.300',
@@ -121,9 +119,9 @@ function App() {
 }
 
 function DesktopNav() {
-  const linkColor = useColorModeValue('gray.600', 'gray.200');
-  const linkHoverColor = useColorModeValue('gray.800', 'white');
-  const popoverContentBgColor = useColorModeValue('white', 'gray.800');
+  const linkColor = useColorModeValue('purple.600', 'purple.200');
+  const linkHoverColor = useColorModeValue('purple.800', 'white');
+  const popoverContentBgColor = useColorModeValue('purple', 'purple.800');
 
   return (
     <Stack direction={'row'} spacing={4}>
@@ -179,7 +177,7 @@ function DesktopSubNav({ label, href, subLabel }) {
       display={'block'}
       p={2}
       rounded={'md'}
-      _hover={{ bg: useColorModeValue('purple.50', 'gray.900') }}
+      _hover={{ bg: useColorModeValue('purple.400', 'purple.100') }}
     >
       <Stack direction={'row'} align={'center'}>
         <Box>
@@ -210,7 +208,7 @@ function DesktopSubNav({ label, href, subLabel }) {
 
 function MobileNav() {
   return (
-    <Stack bg={useColorModeValue('white', 'gray.800')} p={4} display={{ md: 'none' }}>
+    <Stack bg={useColorModeValue('purple', 'purple.800')} p={4} display={{ md: 'none' }}>
       {NAV_ITEMS.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
@@ -233,7 +231,7 @@ function MobileNavItem({ label, children, href }) {
           textDecoration: 'none',
         }}
       >
-        <Text fontWeight={600} color={useColorModeValue('gray.600', 'gray.200')}>
+        <Text fontWeight={600} color={useColorModeValue('purple.400', 'purple.200')}>
           {label}
         </Text>
         {children && (
@@ -272,25 +270,6 @@ const NAV_ITEMS = [
   {
     label: 'P2P Chat',
     href: '/join-room'
-  },
-  {
-    label: 'Test3',
-    children: [
-      {
-        label: 'Test4',
-        subLabel: 'Test Description 3',
-        href: '#',
-      },
-      {
-        label: 'Test5',
-        subLabel: 'Test Description 4',
-        href: '#',
-      },
-    ],
-  },
-  {
-    label: 'Test6',
-    href: '#',
   },
   {
     label: 'AllChat',
