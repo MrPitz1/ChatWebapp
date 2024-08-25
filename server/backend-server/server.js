@@ -6,7 +6,6 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const connectMongoDB = require('./lib/mongodb');
 const Users = require('./models/Users');
-const Friendship = require('./models/Friendship');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -127,8 +126,8 @@ app.post('/server/addfriend', async (req, res) => {
   if (!username || !friendUsername) {
     return res.status(400).json({ message: 'Both usernames are required' });
   }
-  if (username == friendUsername) {
-    return res.status(469).json({ message: 'You cant add yourself as a friend' });
+  if (username === friendUsername) {
+    return res.status(469).json({ message: 'You can\'t add yourself as a friend' });
   }
   try {
     await connectMongoDB();
@@ -140,20 +139,28 @@ app.post('/server/addfriend', async (req, res) => {
       return res.status(404).json({ message: 'One or both users do not exist' });
     }
 
-    if (await friendshipExists(username, friendUsername)) {
+    // Check if friendship already exists
+    const friendshipExists = user.friendships.some(f =>
+      f.friendshipURL === friendUsername || f.friendsName === friendUsername
+    );
+    if (friendshipExists) {
       return res.status(409).json({ message: 'Friendship already exists' });
     }
 
-    const friendshipId = uuidv4();
-    const newFriendship = new Friendship({
-      friendshipId,
-      user1: username,
-      user2: friendUsername,
+    const chatUrl = uuidv4()
+
+    user.friendships.push({
+      friendshipURL: chatUrl,
+      friendsName: friendUsername
     });
+    await user.save();
 
-    await newFriendship.save();
-
-    return res.status(201).json({ message: 'Friend added successfully', friendshipId });
+    friend.friendships.push({
+      friendshipURL: chatUrl,
+      friendsName: username
+    });
+    await friend.save();
+    return res.status(201).json({ message: 'Friend added successfully' });
   } catch (error) {
     console.error('Error adding friend:', error);
     return res.status(500).json({ message: 'An error occurred while adding the friend' });
@@ -163,20 +170,25 @@ app.post('/server/addfriend', async (req, res) => {
 app.get('/server/friendships', async (req, res) => {
   const { username } = req.query;
 
+  if (!username) {
+    return res.status(400).json({ message: 'Username is required' });
+  }
+
   console.log('Received username:', username);
 
   try {
     await connectMongoDB();
     console.log('Connected to MongoDB');
 
-    const friendships = await Friendship.find({
-      $or: [
-        { user1: username },
-        { user2: username }
-      ]
-    });
+    // Find the user by username
+    const user = await Users.findOne({ username }).select('friendships');
 
-    console.log('Found friendships:', friendships);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract the friendships array
+    const friendships = user.friendships;
 
     return res.status(200).json(friendships);
   } catch (error) {
