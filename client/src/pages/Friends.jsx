@@ -70,12 +70,14 @@ const Friends = () => {
 
         <Heading as="h2" size="md" textAlign="center" marginTop="4">Existing Friendships</Heading>
         <Box>
-          {friendships.map((friendship) => (
-            <Flex key={friendship.friendshipId} alignItems="center" justifyContent="space-between" marginY="2">
-              <Text>{friendship.user1} and {friendship.user2}</Text>
-              <Link to={`/chat-room/${friendship.friendshipId}`}>
-                <Button colorScheme="teal" size="sm">Go to Chat</Button>
-              </Link>
+          {friendships.map((friendship, index) => (
+            <Flex key={index} alignItems="center" justifyContent="space-between" marginY="2">
+              <Text>{friendship.friendsName}</Text>
+              {friendship.friendshipURL && (
+                <Link to={`/chat-room/${friendship.friendshipURL}`}>
+                  <Button colorScheme="teal" size="sm">Go to Chat</Button>
+                </Link>
+              )}
             </Flex>
           ))}
         </Box>
