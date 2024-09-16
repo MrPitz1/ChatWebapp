@@ -2,8 +2,6 @@
  * Validation helper functions
  */
 
-const Friendship = require('../models/Friendship');
-
 const validatePassword = (password) => {
     /**
      * Function to validate password strength
@@ -38,21 +36,7 @@ const validateUsername = (username) => {
     );
 };
 
-const friendshipExists = async (user1, user2) => {
-    /**
-     * Function to check if a friendship already exists
-     */
-    const existingFriendship = await Friendship.findOne({
-        $or: [
-        { user1, user2 },
-        { user1: user2, user2: user1 }
-        ]
-    });
-    return !!existingFriendship;
-};
-
 module.exports = {
     validatePassword,
     validateUsername,
-    friendshipExists
 };
