@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const connectMongoDB = require('./lib/mongodb');
+const { validatePassword, validateUsername } = require('./lib/validation');
 const Users = require('./models/Users');
 
 const app = express();
