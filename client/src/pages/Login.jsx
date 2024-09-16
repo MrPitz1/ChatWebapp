@@ -38,7 +38,7 @@ const Login = () => {
       <Stack spacing={4} width="100%" maxWidth="400px" backgroundColor="white" padding="6" boxShadow="lg" borderRadius="md">
         <Heading as="h1" size="lg" textAlign="center">Login</Heading>
         <FormControl id="username" isInvalid={error}>
-          <FormLabel>Benutzername</FormLabel>
+          <FormLabel>Username</FormLabel>
           <Input
             type="text"
             value={username}
@@ -46,7 +46,7 @@ const Login = () => {
           />
         </FormControl>
         <FormControl id="password" isInvalid={error}>
-          <FormLabel>Passwort</FormLabel>
+          <FormLabel>Password</FormLabel>
           <Input
             type="password"
             value={password}

@@ -12,9 +12,15 @@ const PORT = process.env.PORT;
 const NGINX_PORT = process.env.NGINX_PORT;
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 
+// Middleware setup: CORS to handle cross-origin requests and express.json() to parse JSON payloads
 app.use(cors({ origin: `http://localhost:${NGINX_PORT}`, credentials: true }));
 app.use(express.json());
 
+/*
+ * Function to validate password strength.
+ * A valid password must be 8-20 characters long, contain at least one number, one uppercase letter,
+ * one lowercase letter, and one special character.
+ */
 const validatePassword = (password) => {
   const minLength = 8;
   const maxLength = 20;
@@ -32,6 +38,10 @@ const validatePassword = (password) => {
   );
 };
 
+/*
+ * Function to validate username.
+ * A valid username must be 3-20 characters long and consist of letters, numbers, and underscores only.
+ */
 const validateUsername = (username) => {
   const minLength = 3;
   const maxLength = 20;
@@ -43,6 +53,9 @@ const validateUsername = (username) => {
   );
 };
 
+/*
+ * Function to check if a friendship already exists between two users.
+ */
 const friendshipExists = async (user1, user2) => {
   const existingFriendship = await Friendship.findOne({
     $or: [
@@ -53,6 +66,11 @@ const friendshipExists = async (user1, user2) => {
   return !!existingFriendship;
 };
 
+/*
+ * POST /server/register
+ * Endpoint to handle user registration. It validates the username and password, checks if the username
+ * already exists, hashes the password, and then creates a new user in the database.
+ */
 app.post('/server/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -62,7 +80,9 @@ app.post('/server/register', async (req, res) => {
     }
 
     if (!validatePassword(password)) {
-      return res.status(400).json({ message: 'Password does not meet the requirements' });
+      return res.status(400).json({
+        message: 'Password does not meet the requirements. It must be between 8-20 characters long, contain at least one number, one uppercase letter, one lowercase letter, and one special character.'
+      });
     }
 
     await connectMongoDB();
@@ -82,6 +102,11 @@ app.post('/server/register', async (req, res) => {
   }
 });
 
+/*
+ * POST /server/login
+ * Endpoint to handle user login. It verifies the username and password, and if valid, generates a JWT token,
+ * sets cookies for the token and username, and returns a success message.
+ */
 app.post('/server/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -108,6 +133,7 @@ app.post('/server/login', async (req, res) => {
 
     const token = jwt.sign(tokenData, TOKEN_SECRET, { expiresIn: '1d' });
 
+    // Set cookies for token and username
     res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'Lax' });
     res.cookie('username', user.username, { secure: false, sameSite: 'Lax' });
 
@@ -120,6 +146,11 @@ app.post('/server/login', async (req, res) => {
   }
 });
 
+/*
+ * POST /server/addfriend
+ * Endpoint to add a friend. It checks if both users exist, if they aren't the same user, and if a friendship
+ * already exists. If all conditions are met, it creates a new friendship entry in the database.
+ */
 app.post('/server/addfriend', async (req, res) => {
   const { username, friendUsername } = req.body;
 
@@ -167,6 +198,11 @@ app.post('/server/addfriend', async (req, res) => {
   }
 });
 
+/*
+ * GET /server/friendships
+ * Endpoint to retrieve all friendships for a given username. It fetches all records from the database
+ * where the user is either user1 or user2 in the friendship.
+ */
 app.get('/server/friendships', async (req, res) => {
   const { username } = req.query;
 
@@ -197,6 +233,7 @@ app.get('/server/friendships', async (req, res) => {
   }
 });
 
+// Start the server and listen on the specified port
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
