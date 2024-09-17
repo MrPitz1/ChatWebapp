@@ -17,11 +17,7 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString
 app.use(cors({ origin: `http://localhost:${NGINX_PORT}`, credentials: true }));
 app.use(express.json());
 
-/*
- * POST /server/register
- * Endpoint to handle user registration. It validates the username and password, checks if the username
- * already exists, hashes the password, and then creates a new user in the database.
- */
+
 app.post('/server/register', async (req, res) => {
   /** 
    * Route to register a new user
