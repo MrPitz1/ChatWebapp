@@ -17,16 +17,6 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString
 app.use(cors({ origin: `http://localhost:${NGINX_PORT}`, credentials: true }));
 app.use(express.json());
 
-const friendshipExists = async (user1, user2) => {
-  const existingFriendship = await Friendship.findOne({
-    $or: [
-      { user1, user2 },
-      { user1: user2, user2: user1 }
-    ]
-  });
-  return !!existingFriendship;
-};
-
 /*
  * POST /server/register
  * Endpoint to handle user registration. It validates the username and password, checks if the username
@@ -81,11 +71,8 @@ app.post('/server/login', async (req, res) => {
    */
   try {
     const { username, password } = req.body;
-
-    // Connect to MongoDB
     await connectMongoDB();
 
-    // Find the user by username
     const user = await Users.findOne({ username });
 
     // Check if the user exists
@@ -135,7 +122,6 @@ app.post('/server/addfriend', async (req, res) => {
     return res.status(469).json({ message: 'You can\'t add yourself as a friend' });
   }
   try {
-    // Connect to MongoDB
     await connectMongoDB();
 
     // Find the users by username
@@ -193,7 +179,6 @@ app.get('/server/friendships', async (req, res) => {
   console.log('Received username:', username);
 
   try {
-    // Connect to MongoDB
     await connectMongoDB();
 
     // Find the user by username
