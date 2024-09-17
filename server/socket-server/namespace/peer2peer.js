@@ -4,10 +4,6 @@ module.exports = (io, redisClient) => {
   const peer2peerNamespace = io.of('/socket/p2p');
 
   peer2peerNamespace.on('connection', (socket) => {
-    /**
-     * Handle when a client joins a room.
-     * Adds the socket ID to the Redis set for the room and notifies other users in the room.
-     */
     socket.on('join room', async (roomID) => {
       /**
        * Add the socket to the local instance's room and also

@@ -28,7 +28,9 @@ app.post('/server/register', async (req, res) => {
 
     // Validate username and password
     if (!validateUsername(username)) {
-      return res.status(400).json({ message: 'Username does not meet the requirements' });
+      return res.status(400).json({
+        message: 'Username must be between 3 and 20 characters long and can only contain letters, numbers, and underscores.' 
+      });
     }
 
     if (!validatePassword(password)) {
