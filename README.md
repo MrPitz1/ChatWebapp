@@ -21,14 +21,14 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
 
 2. Navigiere in das Root-Verzeichnis des Projekts.
 
-4. Kopiere den Inhalt von .env_example in eine neue Datei .env.
+3. Kopiere den Inhalt von .env_example in eine neue Datei .env.
 
-5. Führe den folgenden Befehl aus, um die Webanwendung mit Docker Compose zu starten:
+4. Führe den folgenden Befehl aus, um die Webanwendung mit Docker Compose zu starten:
 
    ```bash
    docker-compose up
 
-6. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 4000)
+5. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 4000)
 
 ## Architektur
 #### Overview
