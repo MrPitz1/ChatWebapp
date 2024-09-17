@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Box, Button, Input, Stack, Heading } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { color } from 'framer-motion';
 
 const JoinRoom = () => {
   const [inputRoomId, setInputRoomId] = useState('');
@@ -13,7 +12,6 @@ const JoinRoom = () => {
       Join unique Room
     */
     const roomId = uuidv4();
-    console.log(roomId);
     navigate(`/chat-room/${roomId}`);
   };
 

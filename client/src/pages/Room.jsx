@@ -108,31 +108,45 @@ const Room = () => {
 
   function handleOffer(incoming) {
     /* 
-      Handle an incoming offer, create an answer, and send it back
+      Handle an incoming offer, create an answer, and send it back.
+      This function is explained in depth because it can be quite confusing
     */
-    peerRef.current = createPeer();
-    peerRef.current.ondatachannel = (event) => {
-      sendChannel.current = event.channel;
-      sendChannel.current.onmessage = handleReceiveMessage;
-    };
-    const desc = new RTCSessionDescription(incoming.sdp);
-    peerRef.current.setRemoteDescription(desc).then(() => {
-      return peerRef.current.createAnswer();
-    }).then(answer => {
-      return peerRef.current.setLocalDescription(answer);
-    }).then(() => {
-      const payload = {
-        target: incoming.caller,
-        caller: socketRef.current.id,
-        sdp: peerRef.current.localDescription
+      peerRef.current = createPeer();
+
+      // When the remote peer creates a data channel, this event is triggered
+      peerRef.current.ondatachannel = (event) => {
+        sendChannel.current = event.channel; 
+        // Set up a handler for receiving messages from the remote peer
+        sendChannel.current.onmessage = handleReceiveMessage;
       };
-      socketRef.current.emit('answer', payload);
-    }).catch(e => console.log('Offer handling error:', e));
+      // Create an RTC session description from the incoming SDP offer 
+      const desc = new RTCSessionDescription(incoming.sdp); 
+      
+      // Set the remote description for the peer connection with the received SDP offer
+      peerRef.current.setRemoteDescription(desc)
+        .then(() => {
+          // After setting the remote description, create an SDP answer to respond to the offer
+          return peerRef.current.createAnswer();
+        })
+        .then(answer => {
+          // Set the local description for the peer connection with the created SDP answer
+          return peerRef.current.setLocalDescription(answer);
+        })
+        .then(() => {
+          // Once the local description is set, emit the 'answer' event to send the SDP answer back to the caller
+          const payload = {
+            target: incoming.caller, 
+            caller: socketRef.current.id,
+            sdp: peerRef.current.localDescription
+          };
+          socketRef.current.emit('answer', payload);
+        })
+        .catch(e => console.log('Offer handling error:', e));
   }
 
   function handleAnswer(message) {
     /* 
-      Handle an incoming answer from another peer
+      Handle an incoming sdp answer from another peer
     */
     const desc = new RTCSessionDescription(message.sdp);
     peerRef.current.setRemoteDescription(desc).catch(e => console.log('Answer error:', e));

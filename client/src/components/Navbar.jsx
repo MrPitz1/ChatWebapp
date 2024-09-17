@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -13,7 +12,6 @@ import {
   PopoverTrigger,
   PopoverContent,
   useColorModeValue,
-  useBreakpointValue,
   useDisclosure,
 } from '@chakra-ui/react';
 import {
@@ -27,18 +25,29 @@ import Cookies from 'js-cookie';
 function App() {
   const { isOpen, onToggle } = useDisclosure();
   const [username, setUsername] = useState(null);
-  if(username) {
-    NAV_ITEMS.push({
-      label: 'Friends',
-      href: '/friends',
-    });
-  }
+
   useEffect(() => {
-    const username = Cookies.get('username');
-    if (username) {
-      setUsername(username);
+    const usernameFromCookie = Cookies.get('username');
+    if (usernameFromCookie) {
+      setUsername(usernameFromCookie);
     }
   }, []);
+
+
+  const navItems = [
+    {
+      label: 'P2P Chat',
+      href: '/join-room'
+    },
+    {
+      label: 'AllChat',
+      href: '/all-chat',
+    },
+    ...(username ? [{
+      label: 'Friends',
+      href: '/friends',
+    }] : []), // Conditionally include Friends item if username is present
+  ];
 
   return (
     <Box>
@@ -67,13 +76,13 @@ function App() {
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }}>
           <Button
-          as={'a'} fontSize={'m'} fontWeight={800} variant={'link'} href={'/'} color={'purple.600'}
+            as={'a'} fontSize={'m'} fontWeight={800} variant={'link'} href={'/'} color={'purple.600'}
           >
             P2P
           </Button>
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
-            <DesktopNav />
+            <DesktopNav navItems={navItems} />
           </Flex>
         </Flex>
 
@@ -84,7 +93,7 @@ function App() {
           spacing={6}
         >
           {username ? (
-            <Button  as={'a'} fontSize={'sm'} fontWeight={600} variant={'link'} href={'/profile'} color={'purple.600'}>
+            <Button as={'a'} fontSize={'sm'} fontWeight={600} variant={'link'} href={'/profile'} color={'purple.600'}>
               {username}
             </Button>
           ) : (
@@ -112,20 +121,20 @@ function App() {
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
-        <MobileNav />
+        <MobileNav navItems={navItems} />
       </Collapse>
     </Box>
   );
 }
 
-function DesktopNav() {
+function DesktopNav({ navItems }) {
   const linkColor = useColorModeValue('purple.600', 'purple.200');
   const linkHoverColor = useColorModeValue('purple.800', 'white');
   const popoverContentBgColor = useColorModeValue('purple', 'purple.800');
 
   return (
     <Stack direction={'row'} spacing={4}>
-      {NAV_ITEMS.map((navItem) => (
+      {navItems.map((navItem) => (
         <Box key={navItem.label}>
           <Popover trigger={'hover'} placement={'bottom-start'}>
             <PopoverTrigger>
@@ -206,10 +215,10 @@ function DesktopSubNav({ label, href, subLabel }) {
   );
 }
 
-function MobileNav() {
+function MobileNav({ navItems }) {
   return (
-    <Stack bg={useColorModeValue('purple', 'purple.800')} p={4} display={{ md: 'none' }}>
-      {NAV_ITEMS.map((navItem) => (
+    <Stack bg={useColorModeValue('purple.600', 'purple.600')} p={4} display={{ md: 'none' }}>
+      {navItems.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
     </Stack>
@@ -231,7 +240,7 @@ function MobileNavItem({ label, children, href }) {
           textDecoration: 'none',
         }}
       >
-        <Text fontWeight={600} color={useColorModeValue('purple.400', 'purple.200')}>
+        <Text fontWeight={600} color={useColorModeValue('white', 'purple.600')}>
           {label}
         </Text>
         {children && (
@@ -265,17 +274,5 @@ function MobileNavItem({ label, children, href }) {
     </Stack>
   );
 }
-
-const NAV_ITEMS = [
-  {
-    label: 'P2P Chat',
-    href: '/join-room'
-  },
-  {
-    label: 'AllChat',
-    href: '/all-chat',
-  },
-];
-
 
 export default App;

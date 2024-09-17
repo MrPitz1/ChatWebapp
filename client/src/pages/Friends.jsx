@@ -18,7 +18,14 @@ const Friends = () => {
     }
   }, []);
 
-  const fetchFriendships = async (username) => {
+   const fetchFriendships = async (username) => {
+   /**
+   * Fetches the list of friendships for a given user.
+   * Sends a GET request to the server with the username as a query parameter,
+   * and updates the friendships state with the response data.
+   * 
+   * @param {string} username - The username for which to fetch friendships.
+   */
     try {
       const response = await axios.get('/server/friendships', {
         params: { username }
@@ -30,6 +37,12 @@ const Friends = () => {
   };
 
   const handleAddFriend = async () => {
+  /**
+   * Handles adding a new friend by sending a POST request to the server
+   * with the username and friendUsername in the request body. If the
+   * request is successful, it fetches the updated friendships list. If the
+   * friendship already exists, an error message is set.
+   */
     try {
       const response = await axios.post(
         '/server/addfriend',
@@ -38,7 +51,7 @@ const Friends = () => {
       if (response.status === 201) {
         console.log('Friend added successfully');
         setError('');
-        fetchFriendships(username);
+        fetchFriendships(username); // Fetch the updated list of friendships
       }
     } catch (error) {
       if (error.response && error.response.status === 409) {
@@ -48,7 +61,6 @@ const Friends = () => {
       }
     }
   };
-
   return (
     <Box
       display="flex"
@@ -70,12 +82,14 @@ const Friends = () => {
 
         <Heading as="h2" size="md" textAlign="center" marginTop="4">Existing Friendships</Heading>
         <Box>
-          {friendships.map((friendship) => (
-            <Flex key={friendship.friendshipId} alignItems="center" justifyContent="space-between" marginY="2">
-              <Text>{friendship.user1} and {friendship.user2}</Text>
-              <Link to={`/chat-room/${friendship.friendshipId}`}>
-                <Button colorScheme="teal" size="sm">Go to Chat</Button>
-              </Link>
+          {friendships.map((friendship, index) => (
+            <Flex key={index} alignItems="center" justifyContent="space-between" marginY="2">
+              <Text>{friendship.friendsName}</Text>
+              {friendship.friendshipURL && (
+                <Link to={`/chat-room/${friendship.friendshipURL}`}>
+                  <Button colorScheme="teal" size="sm">Go to Chat</Button>
+                </Link>
+              )}
             </Flex>
           ))}
         </Box>
