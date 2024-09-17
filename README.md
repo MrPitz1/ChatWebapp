@@ -1,16 +1,16 @@
 # ChatWebapp
 
-Entwicklung einer P2P-basierten Chat-Webanwendung mit Next.js und Docker.
+Entwicklung einer P2P-basierten Chat-Webanwendung mit React und Express.
 
 ## Kurzbeschreibung
 
-Dieses Projekt zielt darauf ab, eine Chat-Webanwendung zu entwickeln, die Peer-to-Peer-Kommunikation unterstützt. Die Anwendung ermöglicht normale Chats sowie Gruppenchats mit zusätzlicher Unterstützung für anonyme Kommunikation. Die Implementierung erfolgt mithilfe von Next.js und Docker.
+Dieses Projekt zielt darauf ab, eine Chat-Webanwendung zu entwickeln, die Peer-to-Peer-Kommunikation unterstützt. Die Anwendung ermöglicht normale Chats sowie Gruppenchats mit zusätzlicher Unterstützung für anonyme Kommunikation. Die Implementierung erfolgt mithilfe von Express und React in einer Docker Umgebung.
 
 ## Features
 
 - **User Accounts:** Benutzer können Konten erstellen und sich anmelden.
 - **Normaler Chat:** Einzelne Benutzer können miteinander chatten.
-- **Gruppenchat:** Mehrere Benutzer können in einem gemeinsamen Chatraum kommunizieren.
+- **Gruppenchat:** Alle Benutzer können in einem All-Chat chatten.
 - **Anonymer Chat:** Option für anonyme Kommunikation zwischen Benutzern.
 
 ## Installation und Ausführung
@@ -21,15 +21,19 @@ Um die Webanwendung in einer Docker-Umgebung auszuführen, folge diesen Schritte
 
 2. Navigiere in das Root-Verzeichnis des Projekts.
 
-3. Führe den folgenden Befehl aus, um die Webanwendung mit Docker Compose zu starten:
+3. Kopiere den Inhalt von .env_example in eine neue Datei .env.
+
+4. Führe den folgenden Befehl aus, um die Webanwendung mit Docker Compose zu starten:
 
    ```bash
    docker-compose up
 
-4. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 4000)
+5. Die Webapp ist unter dem NGINX Port erreichbar (Standardkonfig: 4000)
 
 ## Architektur
 #### Overview
 ![plot](./images/architecture.png)
 #### Peer to Peer State Diagramm
-![plot](./images/p2p-state-diagramm.png)
+![plot](./images/Peer2Peer.png)
+#### All Chat (Client Server Chat)
+![plot](./images/AllChat.png)
